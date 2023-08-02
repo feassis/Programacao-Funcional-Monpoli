@@ -1,0 +1,21 @@
+Utilities
+
+Name,Cost,Mortgage
+Water Works,150,75
+Electric Company,150,75
+
+effect: Pay (diceRoll*$4) if owner owns 1 utility; Pay (diceRoll*$10) if owner owns both instead
+
+
+Railroads
+US Name,UK Name,Cost,Mortgage
+Reading Railroad,King Cross Station,200,100
+Pennsylvania Railroad,Marylebone Station,200,100
+B. & O. Railroad,Fenchurch St. Station,200,100
+Short Line,Liverpool St. Station,200,100
+
+effect: Pay ($25)*(2^[w-1]), onde w é a quantidade de railroads do dono
+
+
+
+

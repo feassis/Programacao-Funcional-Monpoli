@@ -1,0 +1,23 @@
+Color,US Name,UK Name,Rent,Rent with color set,Rent (1 House),Rent(2 Houses),Rent(3 Houses),Rent(4 Houses),Rent(Hotel),Houses Cost,Hotels Cost (plus 4 houses),Price,Mortgage Value
+Brown,Mediterranean Avenue,Old Kent Road,2,4,10,30,90,160,250,50,50,60,30
+Brown,Baltic Avenue,Whitechapel Road,4,8,20,60,180,320,450,50,50,60,30
+Light Blue,Oriental Avenue,The Angel Islington,6,12,30,90,270,400,550,50,50,100,50
+Light Blue,Vermont Avenue,Euston Road,6,12,30,90,270,400,550,50,50,100,50
+Light Blue,Connecticut Avenue,Pentonville Road,8,16,40,100,300,450,600,50,50,120,60
+Pink,St Charles Place,Pall Mall,10,20,50,150,450,625,750,100,100,140,70
+Pink,States Avenue,Whitehall,10,20,50,150,450,625,750,100,100,140,70
+Pink,Virginia Avenue,Northumberland Avenue,12,24,60,180,500,700,900,100,100,160,80
+Orange,St James Place,Bow Street,14,28,70,200,550,750,950,100,100,180,90
+Orange,Tennessee Avenue,Marlborough Street,14,28,70,200,550,750,950,100,100,180,90
+Orange,New York Avenue,Vine Street,16,32,80,220,600,800,1000,100,100,200,100
+Red,Kentucky Avenue,The Strand,18,36,90,250,700,875,1050,150,150,220,110
+Red,Indiana Avenue,Fleet Street,18,36,90,250,700,875,1050,150,150,220,110
+Red,Illinois Avenue,Trafalgar Square,20,40,100,300,750,925,1100,150,150,240,120
+Yellow,Atlantic Avenue,Leicester Square,22,44,110,330,800,975,1150,150,150,260,130
+Yellow,Ventnor Avenue,Coventry Street,22,44,110,330,800,975,1150,150,150,260,130
+Yellow,Marvin Gardens,Piccadilly,24,48,120,360,850,1025,1200,150,150,280,140
+Green,Pacific Avenue,Regent Street,26,52,130,390,900,1100,1275,200,200,300,150
+Green,North Carolina Avenue,Oxford Street,26,52,130,390,900,1100,1275,200,200,300,150
+Green,Pennsylvania Avenue,Bond Street,28,56,150,450,1000,1200,1400,200,200,320,160
+Dark Blue,Park Place,Park Lane,35,70,175,500,1100,1300,1500,200,200,350,175
+Dark Blue,Boardwalk,Mayfair,50,100,200,600,1400,1700,2000,200,200,400,200
