@@ -1,7 +1,11 @@
 module PlayerType (Player(..)) where
 
 data Player = Player
-  { numeroDadosIguais :: Int, 
-    carteira :: Int, 
+  { 
+    playerID :: Int,
+    chainedDoubles :: Int, 
+    carteira :: Int,
+    deedsAssets :: [Int], --int Identifier
+    isJailed :: Bool,
     numeroSairCadeia :: Int
   } | Bank deriving (Show)

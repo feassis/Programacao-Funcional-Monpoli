@@ -1,6 +1,7 @@
 module Main (main) where
 
-import Lib
+import PlayerType
+import TileType
 
 main :: IO ()
-main = someFunc
+main = putStrLn $ show $! tabuleiro
