@@ -1,6 +1,9 @@
-module TileType (LandTile(..),MiscTile(..),NonBuildable(..),LandTile(..),RealTile(..),PieceSet(..),specialTiles,utilsOrRails,lands,tabuleiro) where
+module TileType (Tile(..),Deed(..),Buildable(..),LandTile(..),MiscTile(..),NonBuildable(..),
+                 RealTile(..),PieceSet(..),specialTiles,utilsOrRails,lands,tabuleiro,updateBoard,
+                 retrieveTiles,serializedTrade) where
 
 import PlayerType
+import qualified Data.List as DT
 
 data PieceSet = Brown | LightBlue | Pink | Orange | Red | Yellow | Green | DarkBlue | UT | RR
   deriving Show
@@ -145,6 +148,12 @@ instance Show RealTile where
   show (NBTile l) = show l
   show (LTile l) = show l
 
+instance Eq RealTile where
+  a == b = identifier a == identifier b
+
+instance Ord RealTile where
+  a <= b = identifier a == identifier b
+
 specialTiles :: [MiscTile]
 specialTiles = [
                  GO "Go" 0,
@@ -198,27 +207,40 @@ lands = [
          Land 0 "Boardwalk" 39 [50,100,200,600,1400,1700,2000] 200 0 DarkBlue 400 200 False
         ]
 
-embaralha :: [a] -> [a]
-embaralha xs = p1 ++ p2
-  where
-    separaemdois [] l1 l2 = (l1,l2)
-    separaemdois (y:ys) l1 l2 = separaemdois ys l2 (y:l1)
-    (p1,p2) = separaemdois xs [] []
-
-
-
---"quicksort", so que nao aleatorio entao nao muito quick
-quicksortTile :: Tile a => [a] -> [a]
-quicksortTile [] = []
-quicksortTile [a] = [a]
-quicksortTile (x:xs) = quicksortTile low ++ [x] ++ quicksortTile high
-  where 
-    low = [y | y<-xs, identifier y <= identifier x]
-    high = [y | y<-xs, identifier y > identifier x]
 
 tabuleiro :: [RealTile]
---tabuleiro = quicksortTile $ (embaralha.embaralha.embaralha) (map MTile specialTiles++map NBTile utilsOrRails++map LTile lands)
-tabuleiro = (map MTile specialTiles++map NBTile utilsOrRails++map LTile lands)
+tabuleiro = DT.sort (map MTile specialTiles++map NBTile utilsOrRails++map LTile lands)
+--tabuleiro = (map MTile specialTiles++map NBTile utilsOrRails++map LTile lands)
 
+updateBoard :: [RealTile] -> [RealTile] -> [RealTile]
+updateBoard og chn = updateBoard' ogo chno
+  where
+    updateBoard' [] [] = []
+    updateBoard' [] (_:_) = error "shit happened at update board"
+    updateBoard' xs [] = xs
+    updateBoard' (x:xs) (y:ys)
+      | identifier x == identifier y = y:updateBoard' xs ys
+      | otherwise = x:updateBoard' xs (y:ys)
+    ogo = DT.sort og
+    chno = DT.sort chn
 
+retrieveTiles :: [Int] -> [RealTile] -> [RealTile]
+retrieveTiles ids tab = retrieveTiles' idso tabo
+  where
+    tabo = DT.sort tab
+    idso = DT.sort ids
+    retrieveTiles' :: [Int] -> [RealTile] -> [RealTile]
+    retrieveTiles' [] _ = []
+    retrieveTiles' (_:_) [] = error "shit happened at retrieve tiles"
+    retrieveTiles' (x:xs) (y:ys)
+      | x == identifier y = y:retrieveTiles' xs ys
+      | otherwise = retrieveTiles' (x:xs) ys
 
+serializedTrade :: [RealTile] -> Player -> [RealTile]
+serializedTrade [] _ = []
+serializedTrade ((MTile m):xs) _ = error "non Deed at Trade"
+serializedTrade ((NBTile d):xs) Bank = NBTile d{donoNB=0}:serializedTrade xs Bank
+serializedTrade ((NBTile d):xs) p = NBTile d{donoNB=playerID p}:serializedTrade xs p
+serializedTrade ((LTile d):xs) Bank = LTile d{donoB=0}:serializedTrade xs Bank
+serializedTrade ((LTile d):xs) p = LTile d{donoB=playerID p}:serializedTrade xs p
+-- data RealTile = MTile MiscTile | NBTile NonBuildable | LTile LandTile
