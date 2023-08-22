@@ -2,6 +2,7 @@ module Window where
 
 import Graphics.Gloss
 import PlayerType
+import TileType
 
 type Line = (Float, Float, Float) -- (x, y, size)
 
@@ -170,6 +171,72 @@ renderTxtSmall posX posY c t = translate posX posY
                 $ scale 0.1 0.1
                 $ color c
                 $ text t
+
+tileText :: [Picture]
+tileText = currentTileText ++ zoomTileText
+
+currentTileText :: [Picture] -- mudar para receber Real
+currentTileText = [renderTxt (widthF * 0.25) (heightF * 0.35) blue "Current Tile"] ++
+                drawLandTileText (widthF * 0.25) (heightF * 0.33) testLandTile
+
+testMiscTile :: MiscTile
+testMiscTile = Chance { nameM = "Chance",  posM = 8}
+
+testNonBuildable :: NonBuildable
+testNonBuildable = Util {donoNB = -1, 
+        nameNB = "Util", 
+        posNB = 1, 
+        priceNB = 100, 
+        morgageValueNB = 80,
+        isMorgagedNB = False}
+
+zoomTileText :: [Picture]
+zoomTileText = [renderTxt (widthF * 0.25) (heightF * 0.10) blue "Zoom Tile"] ++
+                drawNonBuildableText (widthF * 0.25) (heightF * 0.085) testNonBuildable
+
+drawMiscTile :: Float -> Float -> MiscTile -> [Picture]
+drawMiscTile posX posY miscTile = [
+                renderTxtSmall posX posY white ("Name: " ++ (nameM miscTile)), 
+                renderTxtSmall posX (posY - (heightF * 0.015)) white ("Position: " ++ show(posM miscTile))
+        ]
+
+testLandTile :: LandTile
+testLandTile = Land {
+                donoB = -1,
+                nameB = "Orlando",
+                posB = 24,
+                aluguel = [10, 20, 30, 40, 50],
+                buildcost = 20,
+                level = 2,
+                colorSet = DarkBlue,
+                price = 100,
+                morgageValueB = 50,
+                isMorgagedB = True
+        }
+
+drawLandTileText :: Float -> Float -> LandTile -> [Picture]
+drawLandTileText posX posY landTile = [
+                renderTxtSmall posX posY white ("Name: " ++ (nameB landTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015)) white ("Owner: " ++ show(donoB landTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 2)) white ("Position: " ++ show(posB landTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 3)) white ("Rent: " ++ show(aluguel landTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 4)) white ("Build Cost: " ++ show(buildcost landTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 5)) white ("Level: " ++ show(level landTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 6)) white ("Color: " ++ show(colorSet landTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 7)) white ("Price: " ++ show(price landTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 8)) white ("Morgage: " ++ show(morgageValueB landTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 9)) white ("Is Morgaged: " ++ show(isMorgagedB landTile))                
+        ] 
+
+drawNonBuildableText :: Float -> Float -> NonBuildable -> [Picture]
+drawNonBuildableText posX posY nbTile = [
+                renderTxtSmall posX posY white ("Name: " ++ (nameNB nbTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015)) white ("Owner: " ++ show(donoNB nbTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 2)) white ("Position: " ++ show(posNB nbTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 3)) white ("Price: " ++ show(priceNB nbTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 4)) white ("Morgage: " ++ show(morgageValueNB nbTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 5)) white ("Is Morgaged: " ++ show(isMorgagedNB nbTile))
+        ]
 
 playersText :: [Picture]
 playersText = (player1Text player1) ++ (player2Text player2) ++ (player3Text player3) ++ (player4Text player1)
@@ -347,5 +414,5 @@ verticalBorders = [verticalBorder (cellSize *(5.5)), verticalBorder (cellSize *(
 
 
 board :: Picture
-board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText ++ playersText)
+board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText ++ playersText ++ tileText)
 
