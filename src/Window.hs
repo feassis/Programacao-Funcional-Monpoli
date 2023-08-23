@@ -4,7 +4,7 @@ import Graphics.Gloss
 import PlayerType
 import TileType
 
-{-type Line = (Float, Float, Float) -- (x, y, size)
+type Line = (Float, Float, Float) -- (x, y, size)
 
 -- Largura
 width :: Int 
@@ -33,25 +33,14 @@ fps = 30
 lineColor :: Color
 lineColor = white
 
--- Instância 1: Jogador normal
-player1 :: Player
-player1 = Player
-  {
-    playerID = 1,
-    boardPos = 5,
-    chainedDoubles = 0,
-    carteira = 1500,
-    deedsAssets = [1, 2],
-    isJailed = False,
-    jailedTurns = 0
-  }
+
 
 -- Instância 2: Jogador preso
 player2 :: Player
 player2 = Player
   {
     playerID = 2,
-    boardPos = 10,
+    boardPos = 1,
     chainedDoubles = 3,
     carteira = 800,
     deedsAssets = [],
@@ -64,7 +53,7 @@ player3 :: Player
 player3 = Player
   {
     playerID = 3,
-    boardPos = 15,
+    boardPos = 0,
     chainedDoubles = 1,
     carteira = 2000,
     deedsAssets = [],
@@ -171,6 +160,10 @@ renderTxtSmall posX posY c t = translate posX posY
                 $ scale 0.1 0.1
                 $ color c
                 $ text t
+renderCircleSmall posX posY c radious = translate posX posY
+                $ scale 0.3 0.3
+                $ color c
+                $ circle radious
 
 tileText :: [Picture]
 tileText = currentTileText ++ zoomTileText
@@ -180,10 +173,11 @@ currentTileText = [renderTxt (widthF * 0.25) (heightF * 0.35) blue "Current Tile
                 drawLandTileText (widthF * 0.25) (heightF * 0.33) testLandTile
 
 testMiscTile :: MiscTile
-testMiscTile = Chance { nameM = "Chance",  posM = 8}
+testMiscTile = MiscTile { kindM = Chance,  posM = 8}
 
 testNonBuildable :: NonBuildable
-testNonBuildable = Util {donoNB = -1, 
+testNonBuildable = NonBuildable  {donoNB = -1, 
+        kindNB = Util,
         nameNB = "Util", 
         posNB = 1, 
         priceNB = 100, 
@@ -196,11 +190,11 @@ zoomTileText = [renderTxt (widthF * 0.25) (heightF * 0.10) blue "Zoom Tile"] ++
 
 drawMiscTile :: Float -> Float -> MiscTile -> [Picture]
 drawMiscTile posX posY miscTile = [
-                renderTxtSmall posX posY white ("Name: " ++ (nameM miscTile)), 
+                renderTxtSmall posX posY white ("Name: " ++ show(kindM miscTile)), 
                 renderTxtSmall posX (posY - (heightF * 0.015)) white ("Position: " ++ show(posM miscTile))
         ]
 
-testLandTile :: LandTile
+testLandTile :: Land
 testLandTile = Land {
                 donoB = -1,
                 nameB = "Orlando",
@@ -214,7 +208,7 @@ testLandTile = Land {
                 isMorgagedB = True
         }
 
-drawLandTileText :: Float -> Float -> LandTile -> [Picture]
+drawLandTileText :: Float -> Float -> Land -> [Picture]
 drawLandTileText posX posY landTile = [
                 renderTxtSmall posX posY white ("Name: " ++ (nameB landTile)),
                 renderTxtSmall posX (posY - (heightF * 0.015)) white ("Owner: " ++ show(donoB landTile)),
@@ -237,6 +231,73 @@ drawNonBuildableText posX posY nbTile = [
                 renderTxtSmall posX (posY - (heightF * 0.015 * 4)) white ("Morgage: " ++ show(morgageValueNB nbTile)),
                 renderTxtSmall posX (posY - (heightF * 0.015 * 5)) white ("Is Morgaged: " ++ show(isMorgagedNB nbTile))
         ]
+-- Instância 1: Jogador normal
+player1 :: Player
+player1 = Player
+  {
+    playerID = 1,
+    boardPos = 39,
+    chainedDoubles = 0,
+    carteira = 1500,
+    deedsAssets = [1, 2],
+    isJailed = False,
+    jailedTurns = 0
+  }
+
+drawPlayerToken :: (Float, Float) -> Int -> Color -> [Picture]
+drawPlayerToken (posX, posY) playerId color = [
+                        renderCircleSmall (posX + cellSize * 0.2 * fromIntegral(playerId)) posY color 20 
+                ]       
+playersVisuals :: [Picture]
+playersVisuals = playersText ++ (playerToken player1 blue) ++ (playerToken player2 green) ++ (playerToken player3 yellow) 
+
+getPlayerPosition :: [(Float, Float)]
+getPlayerPosition = [
+                ((cellSize *(4.5)), (-cellSize/2*10.75)), -- Pos 0
+                ((cellSize *(3.5)), (-cellSize/2*10.75)), -- Pos 1
+                ((cellSize *(2.5)), (-cellSize/2*10.75)), -- Pos 2
+                ((cellSize *(1.5)), (-cellSize/2*10.75)), -- Pos 3
+                ((cellSize *(0.5)), (-cellSize/2*10.75)), -- Pos 4
+                ((cellSize *(-0.5)), (-cellSize/2*10.75)),-- Pos 5
+                ((cellSize *(-1.5)), (-cellSize/2*10.75)),-- Pos 6
+                ((cellSize *(-2.5)), (-cellSize/2*10.75)),-- Pos 7
+                ((cellSize *(-3.5)), (-cellSize/2*10.75)),-- Pos 8
+                ((cellSize *(-4.5)), (-cellSize/2*10.75)),-- Pos 9
+                ((cellSize *(-5.5)), (-cellSize/2*10.75)),-- Pos 10
+                ((cellSize *(-5.5)), (-cellSize/2*8.75)), -- Pos 11
+                ((cellSize *(-5.5)), (-cellSize/2*6.75)), -- Pos 12
+                ((cellSize *(-5.5)), (-cellSize/2*4.75)), -- Pos 13
+                ((cellSize *(-5.5)), (-cellSize/2*2.75)), -- Pos 14
+                ((cellSize *(-5.5)), (-cellSize/2*0.75)), -- Pos 15
+                ((cellSize *(-5.5)), (-cellSize/2*(-1.25))), -- Pos 16
+                ((cellSize *(-5.5)), (-cellSize/2*(-3.25))), -- Pos 17
+                ((cellSize *(-5.5)), (-cellSize/2*(-5.25))), -- Pos 18
+                ((cellSize *(-5.5)), (-cellSize/2*(-7.25))), -- Pos 19
+                ((cellSize *(-5.5)), (-cellSize/2*(-10.75))), -- Pos 20
+                 ((cellSize *(-4.5)), (cellSize/2*10.75)), -- Pos 21
+                ((cellSize *(-3.5)), (cellSize/2*10.75)), -- Pos 22
+                ((cellSize *(-2.5)), (cellSize/2*10.75)), -- Pos 23
+                ((cellSize *(-1.5)), (cellSize/2*10.75)), -- Pos 24
+                ((cellSize *(-0.5)), (cellSize/2*10.75)), -- Pos 25
+                ((cellSize *(0.5)), (cellSize/2*10.75)),-- Pos 26
+                ((cellSize *(1.5)), (cellSize/2*10.75)),-- Pos 27
+                ((cellSize *(2.5)), (cellSize/2*10.75)),-- Pos 28
+                ((cellSize *(3.5)), (cellSize/2*10.75)),-- Pos 29
+                ((cellSize *(4.5)), (cellSize/2*10.75)),-- Pos 30
+                ((cellSize *(4.55)), (cellSize/2*7.25)), -- Pos 31
+                ((cellSize *(4.55)), (cellSize/2*5.25)), -- Pos 32
+                ((cellSize *(4.55)), (cellSize/2*3.25)), -- Pos 33
+                ((cellSize *(4.55)), (cellSize/2*1.25)), -- Pos 34
+                ((cellSize *(4.55)), (-cellSize/2*0.75)),-- Pos 35
+                ((cellSize *(4.55)), (-cellSize/2*2.75)),-- Pos 36
+                ((cellSize *(4.55)), (-cellSize/2*4.75)),-- Pos 37
+                ((cellSize *(4.55)), (-cellSize/2*6.75)),-- Pos 38
+                ((cellSize *(4.55)), (-cellSize/2*8.75))-- Pos 39
+
+        ]
+
+playerToken :: Player -> Color -> [Picture]
+playerToken player color= drawPlayerToken (getPlayerPosition !! (boardPos player)) (playerID player) color
 
 playersText :: [Picture]
 playersText = (player1Text player1) ++ (player2Text player2) ++ (player3Text player3) ++ (player4Text player1)
@@ -414,5 +475,5 @@ verticalBorders = [verticalBorder (cellSize *(5.5)), verticalBorder (cellSize *(
 
 
 board :: Picture
-board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText ++ playersText ++ tileText)
--}
+board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText ++ playersVisuals ++ tileText)
+
