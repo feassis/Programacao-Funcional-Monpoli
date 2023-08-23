@@ -4,7 +4,7 @@ import Graphics.Gloss
 import PlayerType
 import TileType
 
-type Line = (Float, Float, Float) -- (x, y, size)
+{-type Line = (Float, Float, Float) -- (x, y, size)
 
 -- Largura
 width :: Int 
@@ -415,4 +415,4 @@ verticalBorders = [verticalBorder (cellSize *(5.5)), verticalBorder (cellSize *(
 
 board :: Picture
 board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText ++ playersText ++ tileText)
-
+-}
