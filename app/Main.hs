@@ -7,12 +7,13 @@ import Jogo
 import Graphics.Gloss
 import Window
 import System.Random
-
 main :: IO ()
---main = putStrLn $ show $! tabuleiro
+--main = do putStrLn $ show $! initialTabuleiro
 --main =  display window background board
+
 main = do
-  let nPlayers = 1
+  let nPlayers = 2
+  print $ id $! initialTabuleiro
   semente1 <- getStdGen
   let dicerng = (randomRs (1,6) semente1 :: [Int])
   semente2 <- getStdGen
@@ -20,7 +21,7 @@ main = do
   let tableSetup = setupJogo nPlayers dicerng ccrng
   --reportgame tableSetup
   putStrLn "gamo starto"
-  runGame tableSetup 3
+  runGame tableSetup 6
 
 runGame :: Jogo -> Int -> IO ()
 runGame s 0 = return ()
@@ -37,7 +38,7 @@ reportgame s = do
   reportPlayers (jogadores s)
 
 reportPlayers :: [Player] -> IO ()
-reportPlayers [] = return ()
+reportPlayers [] = putStrLn ""
 reportPlayers (p:ps) = do
   print p
   reportPlayers ps

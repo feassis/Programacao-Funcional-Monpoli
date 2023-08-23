@@ -19,7 +19,7 @@ movePlayerBy p roll
 
 -- will supervise the process only, validation of input is other responsability
 
-{-superviseTrade :: [RealTile] -> Player -> Player -> [Int] -> [Int] -> (Player,Player,[RealTile])
+superviseTrade :: [RealTile] -> Player -> Player -> [Int] -> [Int] -> (Player,Player,[RealTile])
 superviseTrade _ Bank Bank _ _ = (Bank,Bank,[]) -- joke:insider trading return reportToAuthoratiesAndSue
 superviseTrade x Bank p2 y z = superviseTrade x p2 Bank y z
 superviseTrade tab p1 Bank deedsid1 deedsid2 = (p1', Bank, updatedTiles)
@@ -39,4 +39,3 @@ superviseTrade tab p1 p2 deedsid1 deedsid2 = (p1',p2',updatedTiles)
     updatedTiles = ndeeds1to2 ++ ndeeds2to1
     p1' = p1 {deedsAssets = (deedsAssets p1 DT.\\ deedsid1) `DT.union` deedsid2}
     p2' = p2 {deedsAssets = (deedsAssets p2 DT.\\ deedsid2) `DT.union` deedsid1}
--}
