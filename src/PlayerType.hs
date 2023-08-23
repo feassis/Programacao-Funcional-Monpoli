@@ -1,6 +1,6 @@
 module PlayerType (Player(..),payPlayer,chargePlayer,enJail,freeFromJail,onFireGuilt,
                    onFirePardon,move,sitInJail,genIdentifiedPlayer,genStartGamePlayer,
-                   removeDeeds,addDeeds,updatePlayers) where
+                   removeDeeds,addDeeds,updatePlayers,fetchPlayer) where
 
 import qualified Data.List as DL
 
@@ -71,7 +71,16 @@ addDeeds Bank _ = Bank
 addDeeds p xs = p {deedsAssets=deedsAssets p `DL.union` xs }
 
 updatePlayers :: Player -> [Player] -> [Player]
-updatePlayers q [] = error "updating non-existent player"
+updatePlayers q [] = []
 updatePlayers q (p:ps)
   | q == p = q:ps
   | otherwise = p:updatePlayers q ps
+
+fetchPlayer :: Int -> [Player] -> Player
+fetchPlayer _ [] = Bank --effectively an error
+fetchPlayer i (Bank:ps)
+  | i == 0 = Bank
+  | otherwise = fetchPlayer i ps
+fetchPlayer i (p:ps)
+  | i== playerID p = p
+  | otherwise = fetchPlayer i ps
