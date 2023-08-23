@@ -8,9 +8,10 @@ import Graphics.Gloss
 import Window
 import System.Random
 main :: IO ()
---main = do putStrLn $ show $! initialTabuleiro
---main =  display window background board
+--main = putStrLn $ show $! tabuleiro
+main =  display window background board
 
+{-
 main = do
   let nPlayers = 2
   print $ id $! initialTabuleiro
@@ -43,3 +44,4 @@ reportPlayers (p:ps) = do
   print p
   reportPlayers ps
 
+-}
