@@ -164,7 +164,11 @@ renderCircleSmall posX posY c radious = translate posX posY
                 $ scale 0.3 0.3
                 $ color c
                 $ circle radious
-
+renderSquareCell :: (Float, Float) -> Color -> Float -> Picture
+renderSquareCell (posX, posY) c size = translate posX posY
+                $ scale 1 1
+                $ color c
+                $ rectangleWire size size
 tileText :: [Picture]
 tileText = currentTileText ++ zoomTileText
 
@@ -247,9 +251,61 @@ player1 = Player
 drawPlayerToken :: (Float, Float) -> Int -> Color -> [Picture]
 drawPlayerToken (posX, posY) playerId color = [
                         renderCircleSmall (posX + cellSize * 0.2 * fromIntegral(playerId)) posY color 20 
-                ]       
+                ]    
+
+selectionVisuals :: [Picture]
+selectionVisuals = drawSelectionVisuals 39
+
+
+drawSelectionVisuals :: Int -> [Picture]
+drawSelectionVisuals pos  =  [renderSquareCell (getSelectionPosition !! pos) yellow (cellSize)]
+
 playersVisuals :: [Picture]
 playersVisuals = playersText ++ (playerToken player1 blue) ++ (playerToken player2 green) ++ (playerToken player3 yellow) 
+
+getSelectionPosition :: [(Float, Float)]
+getSelectionPosition = [
+                ((cellSize *(5)), (-cellSize*5)), --0
+                ((cellSize *(4)), (-cellSize*5)), --1
+                ((cellSize *(3)), (-cellSize*5)), --2
+                ((cellSize *(2)), (-cellSize*5)), --3
+                ((cellSize *(1)), (-cellSize*5)), --4
+                ((cellSize *(0)), (-cellSize*5)), --5
+                ((cellSize *(-1)), (-cellSize*5)), --6
+                ((cellSize *(-2)), (-cellSize*5)), --7
+                ((cellSize *(-3)), (-cellSize*5)), --8
+                ((cellSize *(-4)), (-cellSize*5)), --9
+                ((cellSize *(-5)), (-cellSize*5)), --10
+                ((cellSize *(-5)), (-cellSize*4)), --11
+                ((cellSize *(-5)), (-cellSize*3)), --12
+                ((cellSize *(-5)), (-cellSize*2)), --13
+                ((cellSize *(-5)), (-cellSize*1)), --14
+                ((cellSize *(-5)), (-cellSize*0)), --15
+                ((cellSize *(-5)), (cellSize*1)), --16
+                ((cellSize *(-5)), (cellSize*2)), --17
+                ((cellSize *(-5)), (cellSize*3)), --18
+                ((cellSize *(-5)), (cellSize*4)), --19
+                ((cellSize *(-5)), (cellSize*5)), -- 20
+                ((cellSize *(-4)), (cellSize*5)), --21
+                ((cellSize *(-3)), (cellSize*5)), --22
+                ((cellSize *(-2)), (cellSize*5)), --23
+                ((cellSize *(-1)), (cellSize*5)), --24
+                ((cellSize *(0)), (cellSize*5)), --25
+                ((cellSize *(1)), (cellSize*5)), --26
+                ((cellSize *(2)), (cellSize*5)), --27 
+                ((cellSize *(3)), (cellSize*5)), --28
+                ((cellSize *(4)), (cellSize*5)), --29
+                ((cellSize *(5)), (cellSize*5)), --30
+                ((cellSize *(5)), (cellSize*4)),--31
+                ((cellSize *(5)), (cellSize*3)),--32
+                ((cellSize *(5)), (cellSize*2)),--33
+                ((cellSize *(5)), (cellSize*1)),--34
+                ((cellSize *(5)), (cellSize*0)),--35
+                ((cellSize *(5)), (cellSize*(-1))),--36
+                ((cellSize *(5)), (cellSize*(-2))),--37
+                ((cellSize *(5)), (cellSize*(-3))),--38
+                ((cellSize *(5)), (cellSize*(-4)))--39
+        ]
 
 getPlayerPosition :: [(Float, Float)]
 getPlayerPosition = [
@@ -475,5 +531,5 @@ verticalBorders = [verticalBorder (cellSize *(5.5)), verticalBorder (cellSize *(
 
 
 board :: Picture
-board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText ++ playersVisuals ++ tileText)
+board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText ++ playersVisuals ++ tileText ++ selectionVisuals )
 
