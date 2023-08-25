@@ -170,11 +170,18 @@ renderSquareCell (posX, posY) c size = translate posX posY
                 $ color c
                 $ rectangleWire size size
 tileText :: [Picture]
-tileText = currentTileText ++ zoomTileText
+tileText = (currentTileText testRealTile) ++ (zoomTileText testRealTile)
 
-currentTileText :: [Picture] -- mudar para receber Real
-currentTileText = [renderTxt (widthF * 0.25) (heightF * 0.35) blue "Current Tile"] ++
-                drawLandTileText (widthF * 0.25) (heightF * 0.33) testLandTile
+testRealTile :: RealTile
+testRealTile = NBTile testNonBuildable
+
+currentTileText :: RealTile -> [Picture] -- mudar para receber Real
+currentTileText (LTile l) = [renderTxt (widthF * 0.25) (heightF * 0.35) blue "Current Tile"] ++
+                drawLandTileText (widthF * 0.25) (heightF * 0.33) l
+currentTileText (NBTile l) = [renderTxt (widthF * 0.25) (heightF * 0.35) blue "Current Tile"] ++
+                drawNonBuildableText (widthF * 0.25) (heightF * 0.33) l
+currentTileText (MTile l) = [renderTxt (widthF * 0.25) (heightF * 0.35) blue "Current Tile"] ++
+                drawMiscTile (widthF * 0.25) (heightF * 0.33) l
 
 testMiscTile :: MiscTile
 testMiscTile = MiscTile { kindM = Chance,  posM = 8}
@@ -188,9 +195,13 @@ testNonBuildable = NonBuildable  {donoNB = -1,
         morgageValueNB = 80,
         isMorgagedNB = False}
 
-zoomTileText :: [Picture]
-zoomTileText = [renderTxt (widthF * 0.25) (heightF * 0.10) blue "Zoom Tile"] ++
-                drawNonBuildableText (widthF * 0.25) (heightF * 0.085) testNonBuildable
+zoomTileText ::RealTile -> [Picture]
+zoomTileText (NBTile l) = [renderTxt (widthF * 0.25) (heightF * 0.10) blue "Zoom Tile"] ++
+                drawNonBuildableText (widthF * 0.25) (heightF * 0.085) l
+zoomTileText (LTile l) = [renderTxt (widthF * 0.25) (heightF * 0.10) blue "Zoom Tile"] ++
+                drawLandTileText (widthF * 0.25) (heightF * 0.085) l
+zoomTileText (MTile l) = [renderTxt (widthF * 0.25) (heightF * 0.10) blue "Zoom Tile"] ++
+                drawMiscTile  (widthF * 0.25) (heightF * 0.085) l
 
 drawMiscTile :: Float -> Float -> MiscTile -> [Picture]
 drawMiscTile posX posY miscTile = [
