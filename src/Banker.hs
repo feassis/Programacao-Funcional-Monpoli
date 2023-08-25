@@ -62,6 +62,9 @@ yesNoQuestion (EventKey (Char 'y') Down _ _) = Just True
 yesNoQuestion (EventKey (Char 'n') Down _ _) = Just False
 yesNoQuestion _ = Nothing
 
+acknowledgeMessage :: Jogo -> Event -> Jogo
+acknowledgeMessage game _ = game{message = (freeRoamMessage.head) (turnos game)}
+
 endTurn :: Jogo -> Jogo
 endTurn bf = bf {turnos=ntl,message=nm,processo=Nothing}
   where
@@ -78,3 +81,5 @@ consumeCCrng bf = bf {rngChanceCommunity = tail.rngChanceCommunity $ bf}
 --diceRollAction bf = af
 --  where
 --    player = getNextPlayer bf
+--    af
+--      | (isJailed player) &&  

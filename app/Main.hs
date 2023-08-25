@@ -9,10 +9,10 @@ import System.Random
 import Banker
 main :: IO ()
 --main = putStrLn $ show $! tabuleiro
-main =  display window background board
+--main =  display window background board
 
 
-{-main = do
+main = do
   let nPlayers = 2
   -- print $ id $! initialTabuleiro
   semente1 <- getStdGen
@@ -27,4 +27,4 @@ main =  display window background board
     tableSetup
     desenhar
     handlekeys
-    (const id)-}
+    (const id)

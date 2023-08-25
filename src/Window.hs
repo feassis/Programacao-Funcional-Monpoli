@@ -535,6 +535,6 @@ board :: Picture
 board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText)
 
 desenhar :: Jogo -> Picture
-desenhar jogo = pictures([board] ++ (playersVisuals (jogadores jogo)) 
+desenhar jogo = pictures([board] ++ (playersVisuals $ tail (jogadores jogo)) 
         ++ (tileText ((tabuleiro jogo) !! (boardPos ((jogadores jogo) !! head(turnos jogo)) )) ((tabuleiro jogo) !! (cursor jogo))) 
         ++ (selectionVisuals (cursor jogo)) ++ (messageVisuals (message jogo)))
