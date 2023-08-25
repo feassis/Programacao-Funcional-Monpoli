@@ -26,18 +26,19 @@ freeRoamMessage n = Message rM rC
         , "Press r to roll die and start turn"
         , "Press u to upgrade or unmortgage the current cursor's tile"
         , "Press d to downgrade the current cursor's tile"
-        , "Press m to mortgage the current cursor's tile"]
+        , "Press m to mortgage the current cursor's tile"
+        , "Press q to declare bankrupcy"]
 
-failedUpgrade :: Int -> Message
-failedUpgrade n = Message fM fC
+failedOperation :: Int -> Message
+failedOperation n = Message fM fC
   where
-    fM = "Player "++show n++", you lack ownership or funds to upgrade this tile"
+    fM = "Player "++show n++", you lack ownership or funds to operate"
     fC = ["Press c to close this warning"]
 
 failedToLeaveJail :: Int -> Int -> Message
 failedToLeaveJail n d = Message fM fC
   where
-    fM = "Player "++show n++" failed to escape from jail, will be released in "++show (3-d)++" turns"
+    fM = "Player "++show n++" failed to escape from jail,\n will be released in "++show (3-d)++" turns"
     fC = ["Press c to close this window"]
 
 goToJail :: Int -> Bool -> Int -> Message
@@ -52,8 +53,19 @@ goToJail n b rng = Message jM jC
     arrest = "\n You have been arrested for:\n"++charge++"\n go to jail and serve thy sentence"
     jM = base ++ onfire ++ arrest
 
-charges :: [String]
+charges :: [String] -- no maximo ate 16 (pra usarmos o rng do chance)
 charges = [
+            "Being just too good at this game",
             "Kicking a puppy",
-            "A crypto scam"
+            "A crypto scam",
+            "Illicit drug possession",
+            "Developing software on Windows",
+            "Cheating at this game",
+            "Tax evasion",
+            "Posting hate speech on Twitter\n ...... I mean X",
+            "Copyright infringement",
+            "Being framed for another players crime",
+            "Not... getting away with murder",
+            "Not appreciating Free Parking",
+            "Breaking the game with their last push"
         ]
