@@ -28,6 +28,7 @@ library
       Banker
       Jogo
       Lib
+      Message
       PlayerType
       SupportMethods
       TileType

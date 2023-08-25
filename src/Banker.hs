@@ -3,7 +3,9 @@ module Banker where
 --Sua existencia visa driblar import cíclico
 import TileType
 import PlayerType
+import Jogo
 import qualified Data.List as DT
+import Graphics.Gloss.Interface.IO.Game
 
 boardsize :: Int
 boardsize = length initialTabuleiro
@@ -39,3 +41,7 @@ superviseTrade tab p1 p2 deedsid1 deedsid2 = (p1',p2',updatedTiles)
     updatedTiles = ndeeds1to2 ++ ndeeds2to1
     p1' = p1 {deedsAssets = (deedsAssets p1 DT.\\ deedsid1) `DT.union` deedsid2}
     p2' = p2 {deedsAssets = (deedsAssets p2 DT.\\ deedsid2) `DT.union` deedsid1}
+
+
+handlekeys :: Event -> Jogo -> Jogo
+handlekeys = undefined

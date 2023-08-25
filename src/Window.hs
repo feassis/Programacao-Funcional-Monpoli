@@ -3,6 +3,7 @@ module Window where
 import Graphics.Gloss
 import PlayerType
 import TileType
+import Jogo
 
 type Line = (Float, Float, Float) -- (x, y, size)
 
@@ -533,3 +534,5 @@ verticalBorders = [verticalBorder (cellSize *(5.5)), verticalBorder (cellSize *(
 board :: Picture
 board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText ++ playersVisuals ++ tileText ++ selectionVisuals )
 
+desenhar :: Jogo -> Picture
+desenhar = undefined

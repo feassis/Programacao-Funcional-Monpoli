@@ -2,6 +2,8 @@ module Jogo where
 
 import PlayerType
 import TileType
+import Graphics.Gloss.Interface.Pure.Game
+import Message
 
 
 data Jogo = Jogo
@@ -10,11 +12,13 @@ data Jogo = Jogo
     jogadores :: [Player],
     turnos :: [Int], -- byplayer id
     rngDice :: [Int],
-    rngChanceCommunity :: [Int]
+    rngChanceCommunity :: [Int],
+    message :: Maybe Message,
+    process :: Maybe (Event -> Jogo)
   }
 
 setupJogo :: Int -> [Int] -> [Int] -> Jogo
-setupJogo n rngd rngc = Jogo initialTabuleiro ps t rngd rngc --da pra fazer aplicacao parcial
+setupJogo n rngd rngc = Jogo initialTabuleiro ps t rngd rngc Nothing Nothing--da pra fazer aplicacao parcial
   where
     ps = genStartGamePlayer n
     t = cycle ([1..n])

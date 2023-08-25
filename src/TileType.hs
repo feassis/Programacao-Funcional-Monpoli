@@ -172,8 +172,6 @@ lands = [
 
 initialTabuleiro :: [RealTile]
 initialTabuleiro = DT.sort (map MTile specialTiles++map NBTile utilsOrRails++map LTile lands)
---initialTabuleiro = map MTile specialTiles ++map NBTile utilsOrRails++map LTile lands
---initialTabuleiro = (map NBTile utilsOrRails)
 
 updateBoard :: [RealTile] -> [RealTile] -> [RealTile]
 updateBoard og chn = updateBoard' ogo chno
