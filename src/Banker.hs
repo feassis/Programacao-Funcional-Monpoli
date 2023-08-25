@@ -4,6 +4,7 @@ module Banker where
 import TileType
 import PlayerType
 import Jogo
+import Message
 import qualified Data.List as DT
 import Graphics.Gloss.Interface.IO.Game
 
@@ -44,4 +45,11 @@ superviseTrade tab p1 p2 deedsid1 deedsid2 = (p1',p2',updatedTiles)
 
 
 handlekeys :: Event -> Jogo -> Jogo
-handlekeys = undefined
+handlekeys (EventKey (Char 'c') Down _ _) game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- manual close to unimportant message
+handlekeys (EventKey (SpecialKey KeyUp) Down _ _ ) game@(Jogo {processo = Nothing}) = game {cursor=(cursor game+1) `mod` (length.tabuleiro) game}
+handlekeys (EventKey (SpecialKey KeyDown) Down _ _ ) game@(Jogo {processo = Nothing}) = game {cursor=(cursor game-1) `mod` (length.tabuleiro) game}
+handlekeys (EventKey (Char 'r') Down _ _) game@(Jogo {processo = Nothing}) = undefined -- roll dice and have turn
+handlekeys (EventKey (Char 'u') Down _ _) game@(Jogo {processo = Nothing}) = undefined -- attempt to upgrade cursor's tile
+handlekeys _ game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- kill popup
+handlekeys _ game@(Jogo {processo = Nothing}) = game --wrongful input does nothing
+handlekeys event game@(Jogo {processo = Just f}) = f event

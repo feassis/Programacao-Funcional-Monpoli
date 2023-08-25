@@ -208,7 +208,7 @@ testLandTile = Land {
                 buildcost = 20,
                 level = 2,
                 colorSet = DarkBlue,
-                price = 100,
+                priceB = 100,
                 morgageValueB = 50,
                 isMorgagedB = True
         }
@@ -232,7 +232,7 @@ drawNonBuildableText posX posY nbTile = [
                 renderTxtSmall posX posY white ("Name: " ++ (nameNB nbTile)),
                 renderTxtSmall posX (posY - (heightF * 0.015)) white ("Owner: " ++ show(donoNB nbTile)),
                 renderTxtSmall posX (posY - (heightF * 0.015 * 2)) white ("Position: " ++ show(posNB nbTile)),
-                renderTxtSmall posX (posY - (heightF * 0.015 * 3)) white ("Price: " ++ show(priceNB nbTile)),
+                renderTxtSmall posX (posY - (heightF * 0.015 * 3)) white ("Price: " ++ show(price nbTile)),
                 renderTxtSmall posX (posY - (heightF * 0.015 * 4)) white ("Morgage: " ++ show(morgageValueNB nbTile)),
                 renderTxtSmall posX (posY - (heightF * 0.015 * 5)) white ("Is Morgaged: " ++ show(isMorgagedNB nbTile))
         ]

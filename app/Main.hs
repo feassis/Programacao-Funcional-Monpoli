@@ -28,24 +28,3 @@ main = do
     desenhar
     handlekeys
     (const id)
-
-{-runGame :: Jogo -> Int -> IO ()
-runGame s 0 = return ()
-runGame s countdown = do
-  let (d1,d2) = roll2die s
-  let p = getNextPlayer s
-  let p' = movePlayerBy p (d1+d2)
-  let s' = Jogo (tabuleiro s) (updatePlayers p' (jogadores s)) (tail (turnos s)) (drop 2 (rngDice s)) (rngChanceCommunity s)
-  reportgame s'
-  runGame s' (countdown-1)
-
-reportgame :: Jogo -> IO ()
-reportgame s = do
-  reportPlayers (jogadores s)
-
-reportPlayers :: [Player] -> IO ()
-reportPlayers [] = putStrLn ""
-reportPlayers (p:ps) = do
-  print p
-  reportPlayers ps
--}

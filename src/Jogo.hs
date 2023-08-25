@@ -14,12 +14,12 @@ data Jogo = Jogo
     rngDice :: [Int],
     rngChanceCommunity :: [Int],
     cursor :: Int,
-    message :: Maybe Message,
-    process :: Maybe (Event -> Jogo)
+    message :: Message,
+    processo :: Maybe (Event -> Jogo)
   }
 
 setupJogo :: Int -> [Int] -> [Int] -> Jogo
-setupJogo n rngd rngc = Jogo initialTabuleiro ps t rngd rngc Nothing Nothing--da pra fazer aplicacao parcial
+setupJogo n rngd rngc = Jogo initialTabuleiro ps t rngd rngc 0 ((freeRoamMessage.head) t) Nothing--da pra fazer aplicacao parcial
   where
     ps = genStartGamePlayer n
     t = cycle ([1..n])

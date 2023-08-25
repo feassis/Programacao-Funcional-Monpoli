@@ -21,6 +21,7 @@ class Tile a => Deed a where
   mortgage :: a -> a
   unmortgage :: a -> a
   kind :: a -> DeedKind
+  price :: a -> Int
 
 class (Tile a,Deed a) => Buildable a where
   build :: a -> a
@@ -58,7 +59,8 @@ instance Deed NonBuildable where
   kind = kindNB
   trade nb p = nb {donoNB = playerID p}
   mortgage nb = nb {isMorgagedNB=True}
-  unmortgage nb = nb {isMorgagedNB=False} 
+  unmortgage nb = nb {isMorgagedNB=False}
+  price = priceNB
 
 data Land = Land
   { 
@@ -70,7 +72,7 @@ data Land = Land
     buildcost :: Int,
     level :: Int,
     colorSet :: ColorSet,
-    price :: Int,
+    priceB :: Int,
     morgageValueB :: Int,
     isMorgagedB :: Bool
   } deriving Show
@@ -85,6 +87,7 @@ instance Deed Land where
   trade l p = l {donoB = playerID p}
   mortgage l = l {isMorgagedB=True} 
   unmortgage l = l {isMorgagedB=False}
+  price = priceB
 
 instance Buildable Land where
   build (Land d k n p a b l c v mv True) = Land d k n p a b l c v mv True
