@@ -13,6 +13,7 @@ data Jogo = Jogo
     turnos :: [Int], -- byplayer id
     rngDice :: [Int],
     rngChanceCommunity :: [Int],
+    cursor :: Int,
     message :: Maybe Message,
     process :: Maybe (Event -> Jogo)
   }
