@@ -242,7 +242,10 @@ selectionVisuals pos = drawSelectionVisuals pos
 
 
 drawSelectionVisuals :: Int -> [Picture]
-drawSelectionVisuals pos  =  [renderSquareCell (getSelectionPosition !! pos) yellow (cellSize)]
+drawSelectionVisuals pos  =  [renderSquareCell (getSelectionPosition !! pos) yellow (cellSize),
+                                renderSquareCell (getSelectionPosition !! pos) yellow (cellSize +2),
+                                renderSquareCell (getSelectionPosition !! pos) yellow (cellSize - 2)
+                         ]
 
 playersVisuals :: [Player] -> [Picture]
 playersVisuals players = (playersText players) ++ (playersTokens players)
@@ -350,7 +353,7 @@ playersText :: [Player] -> [Picture]
 playersText [player1] = (player1Text player1)
 playersText [player1, player2] = (player1Text player1) ++ (player2Text player2)
 playersText [player1, player2, player3] = (player1Text player1) ++ (player2Text player2) ++ (player3Text player3) 
-playersText [player1, player2, player3, player4] = (player1Text player1) ++ (player2Text player2) ++ (player3Text player3) ++ (player4Text player1)
+playersText [player1, player2, player3, player4] = (player1Text player1) ++ (player2Text player2) ++ (player3Text player3) ++ (player4Text player4)
 
 player1Text :: Player -> [Picture]
 player1Text player = [
