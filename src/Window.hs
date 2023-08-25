@@ -4,6 +4,8 @@ import Graphics.Gloss
 import PlayerType
 import TileType
 import Jogo
+import Message
+--import Main (main)
 
 type Line = (Float, Float, Float) -- (x, y, size)
 
@@ -33,38 +35,6 @@ fps = 30
 
 lineColor :: Color
 lineColor = white
-
-
-
--- Instância 2: Jogador preso
-player2 :: Player
-player2 = Player
-  {
-    playerID = 2,
-    boardPos = 1,
-    chainedDoubles = 3,
-    carteira = 800,
-    deedsAssets = [],
-    isJailed = True,
-    jailedTurns = 2
-  }
-
--- Instância 3: Jogador sem propriedades
-player3 :: Player
-player3 = Player
-  {
-    playerID = 3,
-    boardPos = 0,
-    chainedDoubles = 1,
-    carteira = 2000,
-    deedsAssets = [],
-    isJailed = False,
-    jailedTurns = 0
-  }
-
--- Instância 4: Banco
-bank :: Player
-bank = Bank
 
 
 horizontalBorder :: Float -> Picture
@@ -157,6 +127,12 @@ renderTxt posX posY c t = translate posX posY
                 $ color c
                 $ text t
 
+renderTxtMedium posX posY c t = translate posX posY
+                $ scale 0.2 0.2
+                $ color c
+                $ text t
+
+renderTxtSmall :: Float -> Float -> Color -> String -> Picture
 renderTxtSmall posX posY c t = translate posX posY
                 $ scale 0.1 0.1
                 $ color c
@@ -172,6 +148,14 @@ renderSquareCell (posX, posY) c size = translate posX posY
                 $ rectangleWire size size
 tileText :: RealTile -> RealTile -> [Picture]
 tileText currentTile zoomTile = (currentTileText currentTile) ++ (zoomTileText zoomTile)
+
+messageVisuals :: Message -> [Picture]
+messageVisuals message = [renderTxtMedium (cellSize *(-4.3)) (cellSize*4) green (mainmessage message)] 
+        ++ (renderMultipleLines (cellSize *(-4.3)) (cellSize*3.5) white (answeroptions message))
+
+renderMultipleLines :: Float -> Float -> Color -> [String] -> [Picture]
+renderMultipleLines _ _ _ [] = []
+renderMultipleLines posX posY c(s:ss) = (renderTxtSmall posX posY c s) : (renderMultipleLines  posX (posY - cellSize * (0.25)) c ss)
 
 testRealTile :: RealTile
 testRealTile = NBTile testNonBuildable
@@ -538,6 +522,13 @@ verticalBorders :: [Picture]
 verticalBorders = [verticalBorder (cellSize *(5.5)), verticalBorder (cellSize *(4.5)), verticalBorder (-(cellSize *(4.5))) , verticalBorder (-(cellSize *(5.5))) ]
 
 
+testMessage :: Message
+testMessage = Message { mainmessage = "Player "++show 1++", you are free to explore the board",
+                        answeroptions = ["Press the arrows Up or Down to move the cursor"
+                        , "Press r to roll die and start turn"
+                        , "Press u to upgrade or unmortgage the current cursor's tile"
+                        , "Press d to downgrade the current cursor's tile"
+                        , "Press m to mortgage the current cursor's tile"]}
 
 
 board :: Picture
@@ -546,4 +537,4 @@ board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horiz
 desenhar :: Jogo -> Picture
 desenhar jogo = pictures([board] ++ (playersVisuals (jogadores jogo)) 
         ++ (tileText ((tabuleiro jogo) !! (boardPos ((jogadores jogo) !! head(turnos jogo)) )) ((tabuleiro jogo) !! (cursor jogo))) 
-        ++ (selectionVisuals (cursor jogo)))
+        ++ (selectionVisuals (cursor jogo)) ++ (messageVisuals (message jogo)))
