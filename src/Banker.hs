@@ -48,7 +48,7 @@ handlekeys :: Event -> Jogo -> Jogo
 handlekeys (EventKey (Char 'c') Down _ _) game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- manual close to unimportant message
 handlekeys (EventKey (SpecialKey KeyUp) Down _ _ ) game@(Jogo {processo = Nothing}) = game {cursor=(cursor game+1) `mod` (length.tabuleiro) game}
 handlekeys (EventKey (SpecialKey KeyDown) Down _ _ ) game@(Jogo {processo = Nothing}) = game {cursor=(cursor game-1) `mod` (length.tabuleiro) game}
-handlekeys (EventKey (Char 'r') Down _ _) game@(Jogo {processo = Nothing}) = undefined -- roll dice and have turn
+handlekeys (EventKey (Char 'r') Down _ _) game@(Jogo {processo = Nothing}) = diceRollAction game-- roll dice and have turn
 handlekeys (EventKey (Char 'u') Down _ _) game@(Jogo {processo = Nothing}) = undefined -- attempt to upgrade cursor's tile
 handlekeys (EventKey (Char 'd') Down _ _) game@(Jogo {processo = Nothing}) = undefined
 handlekeys (EventKey (Char 'm') Down _ _) game@(Jogo {processo = Nothing}) = undefined
@@ -97,4 +97,11 @@ attemptJailEscape :: Jogo -> Jogo
 attemptJailEscape = undefined
 
 diceRollMove :: Jogo -> Jogo
-diceRollMove = undefined
+diceRollMove bf = af
+  where
+    (r1,r2) = roll2die bf
+    roll = r1+r2
+    newRng = tail $ rngDice bf
+    player = movePlayerBy (getNextPlayer bf) roll
+    players = updatePlayers player (jogadores bf)
+    af = bf {turnos=tail.turnos $ bf, jogadores = players, dice1 = head $ show r1, dice2 = head $ show r2, rngDice = newRng}
