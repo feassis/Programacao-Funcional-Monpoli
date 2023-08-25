@@ -170,8 +170,8 @@ renderSquareCell (posX, posY) c size = translate posX posY
                 $ scale 1 1
                 $ color c
                 $ rectangleWire size size
-tileText :: [Picture]
-tileText = (currentTileText testRealTile) ++ (zoomTileText testRealTile)
+tileText :: RealTile -> RealTile -> [Picture]
+tileText currentTile zoomTile = (currentTileText currentTile) ++ (zoomTileText zoomTile)
 
 testRealTile :: RealTile
 testRealTile = NBTile testNonBuildable
@@ -247,33 +247,28 @@ drawNonBuildableText posX posY nbTile = [
                 renderTxtSmall posX (posY - (heightF * 0.015 * 4)) white ("Morgage: " ++ show(morgageValueNB nbTile)),
                 renderTxtSmall posX (posY - (heightF * 0.015 * 5)) white ("Is Morgaged: " ++ show(isMorgagedNB nbTile))
         ]
--- Instância 1: Jogador normal
-player1 :: Player
-player1 = Player
-  {
-    playerID = 1,
-    boardPos = 39,
-    chainedDoubles = 0,
-    carteira = 1500,
-    deedsAssets = [1, 2],
-    isJailed = False,
-    jailedTurns = 0
-  }
 
 drawPlayerToken :: (Float, Float) -> Int -> Color -> [Picture]
 drawPlayerToken (posX, posY) playerId color = [
                         renderCircleSmall (posX + cellSize * 0.2 * fromIntegral(playerId)) posY color 20 
                 ]    
 
-selectionVisuals :: [Picture]
-selectionVisuals = drawSelectionVisuals 39
+selectionVisuals :: Int -> [Picture]
+selectionVisuals pos = drawSelectionVisuals pos
 
 
 drawSelectionVisuals :: Int -> [Picture]
 drawSelectionVisuals pos  =  [renderSquareCell (getSelectionPosition !! pos) yellow (cellSize)]
 
-playersVisuals :: [Picture]
-playersVisuals = playersText ++ (playerToken player1 blue) ++ (playerToken player2 green) ++ (playerToken player3 yellow) 
+playersVisuals :: [Player] -> [Picture]
+playersVisuals players = (playersText players) ++ (playersTokens players)
+
+
+playersTokens :: [Player] -> [Picture]
+playersTokens [player1] = (playerToken player1 blue)
+playersTokens [player1, player2] = (playerToken player1 blue) ++ (playerToken player2 green) 
+playersTokens [player1, player2, player3] = (playerToken player1 blue) ++ (playerToken player2 green) ++ (playerToken player3 yellow) 
+playersTokens [player1, player2, player3, player4] = (playerToken player1 blue) ++ (playerToken player2 green) ++ (playerToken player3 yellow) ++ (playerToken player4 cyan) 
 
 getSelectionPosition :: [(Float, Float)]
 getSelectionPosition = [
@@ -367,8 +362,11 @@ getPlayerPosition = [
 playerToken :: Player -> Color -> [Picture]
 playerToken player color= drawPlayerToken (getPlayerPosition !! (boardPos player)) (playerID player) color
 
-playersText :: [Picture]
-playersText = (player1Text player1) ++ (player2Text player2) ++ (player3Text player3) ++ (player4Text player1)
+playersText :: [Player] -> [Picture]
+playersText [player1] = (player1Text player1)
+playersText [player1, player2] = (player1Text player1) ++ (player2Text player2)
+playersText [player1, player2, player3] = (player1Text player1) ++ (player2Text player2) ++ (player3Text player3) 
+playersText [player1, player2, player3, player4] = (player1Text player1) ++ (player2Text player2) ++ (player3Text player3) ++ (player4Text player1)
 
 player1Text :: Player -> [Picture]
 player1Text player = [
@@ -543,7 +541,9 @@ verticalBorders = [verticalBorder (cellSize *(5.5)), verticalBorder (cellSize *(
 
 
 board :: Picture
-board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText ++ playersVisuals ++ tileText ++ selectionVisuals )
+board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horizontalLines ++ rentHousesLines ++ boardText)
 
 desenhar :: Jogo -> Picture
-desenhar = undefined
+desenhar jogo = pictures([board] ++ (playersVisuals (jogadores jogo)) 
+        ++ (tileText ((tabuleiro jogo) !! (boardPos ((jogadores jogo) !! head(turnos jogo)) )) ((tabuleiro jogo) !! (cursor jogo))) 
+        ++ (selectionVisuals (cursor jogo)))
