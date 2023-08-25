@@ -76,6 +76,11 @@ updatePlayers q (p:ps)
   | q == p = q:ps
   | otherwise = p:updatePlayers q ps
 
+serializedUpdateplayers :: [Player] -> [Player] -> [Player]
+serializedUpdateplayers qs ps = foldl (flip updatePlayers) ps qs
+--serializedUpdateplayers [] ps = ps
+--serializedUpdateplayers (q:qs) ps = serializedUpdateplayers qs (updatePlayers q ps)
+
 fetchPlayer :: Int -> [Player] -> Player
 fetchPlayer _ [] = Bank --effectively an error
 fetchPlayer i (Bank:ps)

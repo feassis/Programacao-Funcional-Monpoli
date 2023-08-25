@@ -50,6 +50,31 @@ handlekeys (EventKey (SpecialKey KeyUp) Down _ _ ) game@(Jogo {processo = Nothin
 handlekeys (EventKey (SpecialKey KeyDown) Down _ _ ) game@(Jogo {processo = Nothing}) = game {cursor=(cursor game-1) `mod` (length.tabuleiro) game}
 handlekeys (EventKey (Char 'r') Down _ _) game@(Jogo {processo = Nothing}) = undefined -- roll dice and have turn
 handlekeys (EventKey (Char 'u') Down _ _) game@(Jogo {processo = Nothing}) = undefined -- attempt to upgrade cursor's tile
+handlekeys (EventKey (Char 'd') Down _ _) game@(Jogo {processo = Nothing}) = undefined
+handlekeys (EventKey (Char 'm') Down _ _) game@(Jogo {processo = Nothing}) = undefined
+handlekeys (EventKey (Char 'q') Down _ _) game@(Jogo {processo = Nothing}) = undefined
 handlekeys _ game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- kill popup
 handlekeys _ game@(Jogo {processo = Nothing}) = game --wrongful input does nothing
 handlekeys event game@(Jogo {processo = Just f}) = f event
+
+yesNoQuestion :: Event -> Maybe Bool
+yesNoQuestion (EventKey (Char 'y') Down _ _) = Just True
+yesNoQuestion (EventKey (Char 'n') Down _ _) = Just False
+yesNoQuestion _ = Nothing
+
+endTurn :: Jogo -> Jogo
+endTurn bf = bf {turnos=ntl,message=nm,processo=Nothing}
+  where
+    ntl = tail.turnos $ bf
+    nm = freeRoamMessage.head $ ntl
+
+consume2diceroll :: Jogo -> Jogo
+consume2diceroll bf = bf {rngDice=tail.tail $ rngDice bf}
+
+consumeCCrng :: Jogo -> Jogo
+consumeCCrng bf = bf {rngChanceCommunity = tail.rngChanceCommunity $ bf}
+
+--diceRollAction :: Jogo -> Jogo
+--diceRollAction bf = af
+--  where
+--    player = getNextPlayer bf
