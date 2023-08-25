@@ -1,6 +1,6 @@
 module PlayerType (Player(..),payPlayer,chargePlayer,enJail,freeFromJail,onFireGuilt,
                    onFirePardon,move,sitInJail,genIdentifiedPlayer,genStartGamePlayer,
-                   removeDeeds,addDeeds,updatePlayers,fetchPlayer) where
+                   removeDeeds,addDeeds,updatePlayers,fetchPlayer,useJCard,serializedUpdateplayers) where
 
 import qualified Data.List as DL
 
@@ -43,6 +43,12 @@ freeFromJail p = p {isJailed=False,jailedTurns=0}
 sitInJail :: Player -> Player
 sitInJail Bank = Bank
 sitInJail p = p {jailedTurns=jailedTurns p+1}
+
+useJCard :: Player -> Player
+useJCard Bank = Bank
+useJCard p
+  | outOfJailCards p <= 0 = error "using non-existent jail card"
+  | otherwise = p{outOfJailCards = outOfJailCards p-1}
 
 move :: Player -> Int -> Player
 move Bank _ = Bank

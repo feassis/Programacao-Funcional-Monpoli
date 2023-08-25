@@ -77,9 +77,24 @@ consume2diceroll bf = bf {rngDice=tail.tail $ rngDice bf}
 consumeCCrng :: Jogo -> Jogo
 consumeCCrng bf = bf {rngChanceCommunity = tail.rngChanceCommunity $ bf}
 
---diceRollAction :: Jogo -> Jogo
---diceRollAction bf = af
---  where
---    player = getNextPlayer bf
---    af
---      | (isJailed player) &&  
+consumeJCardAndFree :: Jogo -> Jogo
+consumeJCardAndFree bf = bf {jogadores = psf}
+  where
+    player = getNextPlayer bf
+    pf = useJCard.freeFromJail $ player
+    psf = updatePlayers pf (jogadores bf)
+
+diceRollAction :: Jogo -> Jogo
+diceRollAction bf = af
+  where
+    player = getNextPlayer bf
+    af
+      | (isJailed player) && (outOfJailCards player > 0) = diceRollAction.consumeJCardAndFree $ bf
+      | (isJailed player) = attemptJailEscape bf
+      | otherwise = diceRollMove bf
+
+attemptJailEscape :: Jogo -> Jogo
+attemptJailEscape = undefined
+
+diceRollMove :: Jogo -> Jogo
+diceRollMove = undefined
