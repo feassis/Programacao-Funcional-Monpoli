@@ -42,8 +42,8 @@ failedToLeaveJail n d = Message fM justClose
   where
     fM = "Player "++show n++" failed to escape from jail,\n will be released in "++show (3-d)++" turns"
 
-goToJail :: Int -> Bool -> Int -> Message
-goToJail n b rng = Message jM jC
+goToJailMessage :: Int -> Bool -> Int -> Message
+goToJailMessage n b rng = Message jM jC
   where
     base = "Player "++show n
     onfire 
