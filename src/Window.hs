@@ -240,6 +240,15 @@ drawPlayerToken (posX, posY) playerId color = [
 selectionVisuals :: Int -> [Picture]
 selectionVisuals pos = drawSelectionVisuals pos
 
+diceVisuals :: Char -> Char -> [Picture]
+diceVisuals dice1 dice2 = drawDice1 dice1 ++ drawDice2 dice2
+
+drawDice1 :: Char -> [Picture]
+drawDice1 dice = [renderSquareCell ((cellSize *(3.5)), (-cellSize*3.5)) white (cellSize)] ++ [renderTxt (cellSize *(3.35)) (-cellSize*3.7) white [dice]] 
+drawDice2 :: Char -> [Picture]
+drawDice2 dice = [renderSquareCell ((cellSize *(2)), (-cellSize*3.5)) white (cellSize)]  ++ [renderTxt (cellSize *(1.85)) (-cellSize*3.7) white [dice]] 
+
+
 
 drawSelectionVisuals :: Int -> [Picture]
 drawSelectionVisuals pos  =  [renderSquareCell (getSelectionPosition !! pos) yellow (cellSize),
@@ -540,4 +549,4 @@ board = pictures (horizontalBorders ++ verticalBorders ++ verticalLines ++ horiz
 desenhar :: Jogo -> Picture
 desenhar jogo = pictures([board] ++ (playersVisuals $ tail (jogadores jogo)) 
         ++ (tileText ((tabuleiro jogo) !! (boardPos ((jogadores jogo) !! head(turnos jogo)) )) ((tabuleiro jogo) !! (cursor jogo))) 
-        ++ (selectionVisuals (cursor jogo)) ++ (messageVisuals (message jogo)))
+        ++ (selectionVisuals (cursor jogo)) ++ (messageVisuals (message jogo)) ++ diceVisuals (dice1 jogo) (dice2 jogo))
