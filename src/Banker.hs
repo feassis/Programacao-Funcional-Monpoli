@@ -53,6 +53,7 @@ handlekeys (EventKey (Char 'u') Down _ _) game@(Jogo {processo = Nothing}) = upg
 handlekeys (EventKey (Char 'd') Down _ _) game@(Jogo {processo = Nothing}) = downgradeCursorTile game
 handlekeys (EventKey (Char 'm') Down _ _) game@(Jogo {processo = Nothing}) = mortgageCursorTile game
 handlekeys (EventKey (Char 'q') Down _ _) game@(Jogo {processo = Nothing}) = undefined
+handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (`sendToJail` False)
 --handlekeys _ game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- kill popup
 handlekeys _ game@(Jogo {processo = Nothing}) = game --wrongful input does nothing
 handlekeys event game@(Jogo {processo = Just f}) = f event
@@ -92,6 +93,7 @@ diceRollAction bf = af
     player = getNextPlayer bf
     af
       | (isJailed player) && (outOfJailCards player > 0) = diceRollAction.consumeJCardAndFree $ bf
+      | (isJailed player) && (jailedTurns player>=3) = diceRollMove bf{jogadores=updatePlayers (freeFromJail player) (jogadores bf)}
       | (isJailed player) = jailEscapeProposal bf
       | otherwise = diceRollMove bf
 
@@ -103,8 +105,8 @@ jailEscapeProposal bf = af
 
 jailProposalQuery :: Jogo -> Maybe Bool -> Jogo
 jailProposalQuery bf Nothing = jailEscapeProposal bf --redo, retry
-jailProposalQuery bf (Just True) = undefined --pay to escape
-jailProposalQuery bf (Just False) = undefined --try rolling for doubles
+jailProposalQuery bf (Just True) = tryPayJailFine bf --pay to escape
+jailProposalQuery bf (Just False) = tryJailBreak bf --try rolling for doubles
 
 diceRollMove :: Jogo -> Jogo
 diceRollMove bf = af -- it should also handle rolling doubles
@@ -116,9 +118,12 @@ moveInGamePlayerBy :: Jogo -> Int -> Int -> Jogo
 moveInGamePlayerBy bf d1 d2 = af
   where
     roll = d1+d2
-    player = movePlayerBy (getNextPlayer bf) roll
-    players = updatePlayers player (jogadores bf)
-    af = tileEvent $ bf {jogadores = players, dice1 = head $ show d1, dice2 = head $ show d2}
+    player = (getNextPlayer bf)
+    nplayer = movePlayerBy player roll
+    players = updatePlayers nplayer (jogadores bf)
+    af
+      | boardPos player > boardPos nplayer = tileEvent.passGoEvent $ bf {jogadores = players, dice1 = head $ show d1, dice2 = head $ show d2}
+      | otherwise = tileEvent $ bf {jogadores = players, dice1 = head $ show d1, dice2 = head $ show d2}
 
 tileEvent :: Jogo -> Jogo
 tileEvent bf = af
@@ -437,11 +442,35 @@ activateMisc bf m = case kindM m of
                       Community -> (communityChoice !! (head $ rngChanceCommunity bf)) (consumeCCrng bf)
                       FreePark -> endTurn bf
                       ToJail -> sendToJail bf False
+                      Jail -> endTurn bf
                       _ -> getCorrectTax bf (identifier m)
 
 getCorrectTax :: Jogo -> Int -> Jogo
 getCorrectTax bf pos = debugDefault bf
 
+tryPayJailFine :: Jogo -> Jogo
+tryPayJailFine bf = af
+  where
+    player = getNextPlayer bf
+    pPlayer = freeFromJail $ chargePlayer player 50
+    af
+      | carteira player >= 50 = diceRollAction bf{jogadores= updatePlayers pPlayer (jogadores bf)}
+      | otherwise = combineProcess tryJailBreak (`showFunnyMessage` (failedOperation (playerID player))) bf
+
+tryJailBreak :: Jogo -> Jogo
+tryJailBreak bf = af
+  where
+    player = getNextPlayer bf
+    escapeP = freeFromJail player
+    sitP = sitInJail player
+    (d1,d2) = roll2die bf
+    af
+      | d1==d2 = moveInGamePlayerBy (consume2diceroll bf{jogadores = updatePlayers escapeP (jogadores bf)}) d1 d2
+      | otherwise = combineProcess endTurn (`showFunnyMessage` (failedToLeaveJail (playerID sitP) (jailedTurns sitP))) (consume2diceroll bf{jogadores = updatePlayers sitP (jogadores bf)})
+
 debugDefault :: Jogo -> Jogo
 debugDefault = endTurn
+
+debugForce :: Jogo -> (Jogo->Jogo) -> Jogo
+debugForce bf f = f bf
 
