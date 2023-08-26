@@ -63,14 +63,14 @@ yesNoQuestion (EventKey (Char 'n') Down _ _) = Just False
 yesNoQuestion _ = Nothing
 
 acknowledgeMessage :: Jogo -> Event -> Jogo
-acknowledgeMessage game (EventKey (Char 'c') Down _ _) = endTurn game --non-gameplay related messages should only really happen at the end of turn
+acknowledgeMessage game (EventKey (Char 'c') Down _ _) = game{message = (freeRoamMessage.head) (turnos game)}
 acknowledgeMessage game _ = game{processo = Just $ acknowledgeMessage game} --redo, retry
 
 endTurn :: Jogo -> Jogo
 endTurn bf = bf {turnos=tail.turnos $ bf, cursor = nc, message = ms, processo=Nothing}
   where
     ntl = tail.turnos $ bf
-    nc = boardPos $ fetchPlayer (head ntl) (jogadores bf)  
+    nc = boardPos $ fetchPlayer (head ntl) (jogadores bf)
     ms = freeRoamMessage.head $ ntl
 
 consume2diceroll :: Jogo -> Jogo
@@ -128,7 +128,7 @@ tileEvent bf = af
     --af = endTurn bf --dummy id to test endturn
 
 triggerTile :: Jogo -> RealTile -> Jogo
-triggerTile bf (MTile m) = debugDefault bf
+triggerTile bf (MTile m) = activateMisc bf m
 triggerTile bf t@(NBTile nb)
   | owner nb == 0 && carteira player >= price nb = offerTile bf t --offer to buy
   | playerID player /= owner nb = debugDefault bf --charge player if unmortgaged
@@ -328,12 +328,94 @@ sendToJail bf onfire = af
     nplayer = onFirePardon.enJail $ move player jailPos
     nps = updatePlayers nplayer (jogadores bf)
     arrestMessage = goToJailMessage (playerID player) onfire (head.rngChanceCommunity $ bf)
-    af = consumeCCrng bf{jogadores=nps} `showFunnyMessage` arrestMessage
+    af = combineProcess endTurn (`showFunnyMessage` arrestMessage) (consumeCCrng bf{jogadores=nps})
 
 payIngamePlayer :: Jogo -> Player -> Int -> Jogo
 payIngamePlayer bf p v = bf{jogadores=nps}
   where
     nps = updatePlayers (payPlayer p v) (jogadores bf)
+
+passGoEvent :: Jogo -> Jogo
+passGoEvent bf = payIngamePlayer bf (getNextPlayer bf) 200
+
+setIngamePlayerPos :: Jogo -> Player -> Int -> Jogo
+setIngamePlayerPos bf p pos = bf{jogadores =updatePlayers (move p pos) (jogadores bf)}
+
+movePlayerCard :: Jogo -> Int -> Jogo
+movePlayerCard bf pos = af
+  where
+    player = getNextPlayer bf
+    af
+      | boardPos player > pos = tileEvent.passGoEvent $ setIngamePlayerPos bf player pos
+      | otherwise = tileEvent (setIngamePlayerPos bf player pos)
+
+combineProcess :: (Jogo -> Jogo) -> (Jogo -> Jogo) -> (Jogo->Jogo)
+combineProcess f1 f2 s1 = let s2 = f1 s1
+                              s3 = case processo s2 of
+                                Nothing -> f2 s2
+                                Just f -> s2{processo=Just $ f2.f}
+                              in s3
+
+giveGOoJFC :: Jogo -> Jogo
+giveGOoJFC bf = bf {jogadores=nps}
+  where
+    player = getNextPlayer bf
+    nplayer = case player of
+      Bank -> Bank
+      _ -> player {outOfJailCards = outOfJailCards player+1}
+    nps = updatePlayers nplayer (jogadores bf)
+
+chanceChoice :: [Jogo -> Jogo]
+chanceChoice = [
+                (`sendToJail` False)
+                , \x -> combineProcess (`movePlayerCard` 39) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to Boardwalk")) x
+                , \x -> combineProcess (`movePlayerCard` 0) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to Go (Collect $200)")) x
+                , \x -> combineProcess (`movePlayerCard` 24) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to Illinois Avenue. If you pass Go, collect $200")) x
+                , \x -> combineProcess (`movePlayerCard` 11) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to St. Charles Place. If you pass Go, collect $200")) x
+                , debugDefault
+                , debugDefault
+                , debugDefault
+                , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Bank pays you dividend of $50")) $ (payIngamePlayer x (getNextPlayer x) 50)
+                , \x -> combineProcess (endTurn.giveGOoJFC) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "You get a Get out of Jail Card")) $ x
+                , \x -> combineProcess (`movePlayerCard` ((boardPos (getNextPlayer x)-3) `mod` (length.tabuleiro) x)) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Go back 3 spaces")) x
+                , debugDefault
+                , debugDefault
+                , \x -> combineProcess (`movePlayerCard` 5) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Take a trip to Reading Railroad. If you pass Go, collect $200")) x
+                , debugDefault
+                , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Your building loan matures. Collect $150")) $ (payIngamePlayer x (getNextPlayer x) 150)
+              ]
+
+communityChoice :: [Jogo -> Jogo]
+communityChoice = [
+                  (`sendToJail` False)
+                  , \x -> combineProcess (`movePlayerCard` 0) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to Go (Collect $200)")) x
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Bank error in your favor. Collect $200")) $ (payIngamePlayer x (getNextPlayer x) 200)
+                  , debugDefault
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "From sale of stock you get $50")) $ (payIngamePlayer x (getNextPlayer x) 50)
+                  , \x -> combineProcess (endTurn.giveGOoJFC) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "You get a Get out of Jail Card")) $ x
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Holiday fund matures. Receive $100")) $ (payIngamePlayer x (getNextPlayer x) 100)
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Income tax refund. Collect $20")) $ (payIngamePlayer x (getNextPlayer x) 20)
+                  , debugDefault
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Life insurance matures. Collect $100")) $ (payIngamePlayer x (getNextPlayer x) 100)
+                  , debugDefault
+                  , debugDefault
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Receive $25 consultancy fee")) $ (payIngamePlayer x (getNextPlayer x) 25)
+                  , debugDefault
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "You have won second prize in a beauty contest. Collect $10")) $ (payIngamePlayer x (getNextPlayer x) 10)
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "You inherit $100")) $ (payIngamePlayer x (getNextPlayer x) 100)
+                ]
+
+activateMisc :: Jogo -> MiscTile -> Jogo
+activateMisc bf m = case kindM m of
+                      GO -> endTurn.passGoEvent $ bf
+                      Chance -> (chanceChoice !! (head $ rngChanceCommunity bf)) (consumeCCrng bf)
+                      Community -> (communityChoice !! (head $ rngChanceCommunity bf)) (consumeCCrng bf)
+                      FreePark -> endTurn bf
+                      ToJail -> sendToJail bf False
+                      _ -> getCorrectTax bf (identifier m)
+
+getCorrectTax :: Jogo -> Int -> Jogo
+getCorrectTax bf pos = debugDefault bf
 
 debugDefault :: Jogo -> Jogo
 debugDefault = endTurn

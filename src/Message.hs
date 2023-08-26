@@ -97,3 +97,6 @@ alreadyMortgaged :: Int -> Message
 alreadyMortgaged n = Message mM justClose
   where
     mM = "Player "++show n++", this lot is already mortgaged"
+
+funnyMessageMaker :: Int -> String -> Message
+funnyMessageMaker n funny = Message ("Player "++show n++","++funny) justClose
