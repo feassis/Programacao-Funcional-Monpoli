@@ -137,10 +137,35 @@ triggerTile bf t@(NBTile nb)
     player = getNextPlayer bf
 triggerTile bf t@(LTile l)
   | owner l == 0 = offerTile bf t --offer to buy
-  | playerID player /= owner l = debugDefault bf --charge player if unmortgaged
+  | playerID player /= owner l = rentCharge bf player (owner l) l --charge player if unmortgaged
   | otherwise = endTurn bf --just end turn
   where
     player = getNextPlayer bf
+
+rentCharge :: Jogo -> Player -> Int -> Land -> Jogo
+rentCharge bf player ownerId tile = endTurn $ af {jogadores = newPlayers}
+  where
+    af = f (attemptChargePlayer bf player value)
+    value = (aluguel tile) !! (stage tile)
+    f (Left bf') = bankruptPlayer bf' player
+    f (Right bf') = bf'
+    newPlayers = updatePlayers newOwner (jogadores af)
+    newOwner = payPlayer (fetchPlayer ownerId (jogadores af)) value
+    
+
+attemptChargePlayer :: Jogo -> Player -> Int -> (Either Jogo Jogo)
+attemptChargePlayer bf player value
+  | carteira player < value = solveDebt bf
+  | otherwise = Right $ bf {jogadores = newPlayers}
+  where
+    newPlayers = updatePlayers newPlayer (jogadores bf)
+    newPlayer = chargePlayer player value
+
+solveDebt :: Jogo -> (Either Jogo Jogo)
+solveDebt bf = (Right bf)
+
+bankruptPlayer :: Jogo -> Player -> Jogo
+bankruptPlayer bf _ = endTurn bf
 
 offerTile :: Jogo -> RealTile -> Jogo
 offerTile bf rt = af
