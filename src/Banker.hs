@@ -53,7 +53,7 @@ handlekeys (EventKey (Char 'u') Down _ _) game@(Jogo {processo = Nothing}) = upg
 handlekeys (EventKey (Char 'd') Down _ _) game@(Jogo {processo = Nothing}) = downgradeCursorTile game
 handlekeys (EventKey (Char 'm') Down _ _) game@(Jogo {processo = Nothing}) = mortgageCursorTile game
 handlekeys (EventKey (Char 'q') Down _ _) game@(Jogo {processo = Nothing}) = undefined
-handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (`sendToJail` False)
+handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (chanceChoice !! 9)
 --handlekeys _ game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- kill popup
 handlekeys _ game@(Jogo {processo = Nothing}) = game --wrongful input does nothing
 handlekeys event game@(Jogo {processo = Just f}) = f event
@@ -376,8 +376,8 @@ movePlayerCard bf pos = af
   where
     player = getNextPlayer bf
     af
-      | boardPos player > pos = tileEvent.passGoEvent $ setIngamePlayerPos bf player pos
-      | otherwise = tileEvent (setIngamePlayerPos bf player pos)
+      | boardPos player > pos = tileEvent $ passGoEvent (setIngamePlayerPos bf player pos)
+      | otherwise = tileEvent $ (setIngamePlayerPos bf player pos)
 
 combineProcess :: (Jogo -> Jogo) -> (Jogo -> Jogo) -> (Jogo->Jogo)
 combineProcess f1 f2 s1 = let s2 = f1 s1
