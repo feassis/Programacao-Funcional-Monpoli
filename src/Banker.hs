@@ -93,15 +93,23 @@ diceRollAction bf = af
       | (isJailed player) = attemptJailEscape bf
       | otherwise = diceRollMove bf
 
-attemptJailEscape :: Jogo -> Jogo
-attemptJailEscape = undefined
+-- attemptJailEscape :: Jogo -> Jogo
+-- attemptJailEscape = af
+--   where
+--     (r1,r2) = roll2die
+--     player = getNextPlayer bf
+--     af
+--       | r1==r2 = saindoDaCadeia
+--       | jailedTurns >= 3 = ??
+--       | otherwise = ??
 
 diceRollMove :: Jogo -> Jogo
 diceRollMove bf = af
   where
     (r1,r2) = roll2die bf
     roll = r1+r2
-    newRng = tail $ rngDice bf
+    newRng = tail $ tail $ rngDice bf
     player = movePlayerBy (getNextPlayer bf) roll
     players = updatePlayers player (jogadores bf)
     af = bf {turnos=tail.turnos $ bf, jogadores = players, dice1 = head $ show r1, dice2 = head $ show r2, rngDice = newRng}
+
