@@ -35,3 +35,6 @@ roll2die s = (d1,d2)
 
 getNextPlayer :: Jogo -> Player
 getNextPlayer s = fetchPlayer (head $ turnos s) (jogadores s)
+
+getTriggeredTile :: Jogo -> RealTile
+getTriggeredTile s = tabuleiro s !! boardPos (getNextPlayer s)

@@ -26,11 +26,9 @@ payPlayer :: Player -> Int -> Player
 payPlayer Bank _ = Bank
 payPlayer p v = p {carteira=carteira p+v}
 
-chargePlayer :: Player -> Int -> Either Player Player
-chargePlayer Bank _ = Right Bank
-chargePlayer p v
-  | carteira p >= v = Right p {carteira=carteira p-v}
-  | otherwise = Left p
+chargePlayer :: Player -> Int -> Player --I assume you already confirmed it can be charged
+chargePlayer Bank _ = Bank
+chargePlayer p v = p {carteira=carteira p-v}
 
 enJail :: Player -> Player
 enJail Bank = Bank
