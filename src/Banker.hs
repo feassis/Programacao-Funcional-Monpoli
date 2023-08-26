@@ -63,7 +63,8 @@ yesNoQuestion (EventKey (Char 'n') Down _ _) = Just False
 yesNoQuestion _ = Nothing
 
 acknowledgeMessage :: Jogo -> Event -> Jogo
-acknowledgeMessage game _ = game{message = (freeRoamMessage.head) (turnos game)}
+acknowledgeMessage game (EventKey (Char 'c') Down _ _) = endTurn game --non-gameplay related messages should only really happen at the end of turn
+acknowledgeMessage game _ = game{processo = Just $ acknowledgeMessage game} --redo, retry
 
 endTurn :: Jogo -> Jogo
 endTurn bf = bf {turnos=tail.turnos $ bf, cursor = nc, message = ms, processo=Nothing}
@@ -314,6 +315,25 @@ finishMortgage bf (NBTile nb) = af
     nboard = updateBoard (tabuleiro bf) nrt
     af = bf{tabuleiro=nboard,jogadores=nps}
 finishMortgage bf _ = bf --MTile shouldn't even happen
+
+showFunnyMessage :: Jogo -> Message -> Jogo
+showFunnyMessage bf ms = bf'{processo = Just $ acknowledgeMessage bf'}
+  where
+    bf' = bf {message=ms}
+
+sendToJail :: Jogo -> Bool -> Jogo
+sendToJail bf onfire = af
+  where
+    player = getNextPlayer bf
+    nplayer = onFirePardon.enJail $ move player jailPos
+    nps = updatePlayers nplayer (jogadores bf)
+    arrestMessage = goToJailMessage (playerID player) onfire (head.rngChanceCommunity $ bf)
+    af = consumeCCrng bf{jogadores=nps} `showFunnyMessage` arrestMessage
+
+payIngamePlayer :: Jogo -> Player -> Int -> Jogo
+payIngamePlayer bf p v = bf{jogadores=nps}
+  where
+    nps = updatePlayers (payPlayer p v) (jogadores bf)
 
 debugDefault :: Jogo -> Jogo
 debugDefault = endTurn
