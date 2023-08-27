@@ -136,7 +136,7 @@ triggerTile :: Jogo -> RealTile -> Jogo
 triggerTile bf (MTile m) = activateMisc bf m
 triggerTile bf t@(NBTile nb)
   | owner nb == 0 && carteira player >= price nb = offerTile bf t --offer to buy
-  | playerID player /= owner nb = debugDefault bf --charge player if unmortgaged
+  | playerID player /= owner nb = utilrailRentCharge bf player nb--charge player if unmortgaged
   | otherwise = endTurn bf --just end turn
   where
     player = getNextPlayer bf
@@ -148,8 +148,20 @@ triggerTile bf t@(LTile l)
     player = getNextPlayer bf
 
 utilrailRentCharge :: Jogo -> Player -> NonBuildable -> Jogo
-utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=RailRoad}) = bf
-utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=Util}) = bf
+utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=RailRoad}) = af
+  where
+    ownerId = owner nb
+    value = calculaRailroadRent (fetchPlayer ownerId (jogadores bf)) bf
+    ownerp = fetchPlayer ownerId (jogadores bf)
+    af = attemptChargePlayer bf jogador ownerp value
+
+utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=Util}) = af {rngDice = tail $ rngDice bf}
+  where
+    ownerId = owner nb
+    value = calculaUtilRent (fetchPlayer ownerId (jogadores bf)) bf
+    ownerp = fetchPlayer ownerId (jogadores bf)
+    af = attemptChargePlayer bf jogador ownerp value
+
 utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=Build}) = bf --this guy should not exist
 
 rentCharge :: Jogo -> Player -> Int -> Land -> Jogo
@@ -176,11 +188,15 @@ calculaRailroadRent player jogo = if railroadsOwned == 0 then 0
       railroadsOwned = length $ filter filterRail (tabuleiro jogo)
 
 calculaUtilRent :: Player -> Jogo -> Int -- takes owner of tile and the game to return the rent
-calculaUtilRent player jogo = dice * (2 ^ utilitiesOwned)
+calculaUtilRent player jogo = dice *  multiplyer
   where
     filterUtil (NBTile l) = (kindNB l == Util) && (donoNB l == playerID player)
     filterUtil _ = False
     utilitiesOwned = length $ filter filterUtil (tabuleiro jogo)
+    multiplyer
+      | utilitiesOwned == 0 = 0
+      | utilitiesOwned == 1 = 4
+      | otherwise = 10
     dice = head (rngDice jogo)
 
 attemptChargePlayer :: Jogo -> Player -> Player -> Int -> Jogo
