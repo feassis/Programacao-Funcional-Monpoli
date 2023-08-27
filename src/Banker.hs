@@ -53,7 +53,7 @@ handlekeys (EventKey (Char 'u') Down _ _) game@(Jogo {processo = Nothing}) = upg
 handlekeys (EventKey (Char 'd') Down _ _) game@(Jogo {processo = Nothing}) = downgradeCursorTile game
 handlekeys (EventKey (Char 'm') Down _ _) game@(Jogo {processo = Nothing}) = mortgageCursorTile game
 handlekeys (EventKey (Char 'q') Down _ _) game@(Jogo {processo = Nothing}) = undefined
-handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (chanceChoice !! 9)
+handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (\g -> bankruptPlayer g (fetchPlayer 1 (jogadores game)) 2)
 --handlekeys _ game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- kill popup
 handlekeys _ game@(Jogo {processo = Nothing}) = game --wrongful input does nothing
 handlekeys event game@(Jogo {processo = Just f}) = f event
@@ -152,10 +152,11 @@ rentCharge bf player ownerId tile = endTurn $ af {jogadores = newPlayers}
   where
     af = f (attemptChargePlayer bf player value)
     value = (aluguel tile) !! (stage tile)
-    f (Left bf') = bankruptPlayer bf' player
+    f (Left bf') = bankruptPlayer bf' player ownerId
     f (Right bf') = bf'
-    newPlayers = updatePlayers newOwner (jogadores af)
-    newOwner = payPlayer (fetchPlayer ownerId (jogadores af)) value
+    newPlayers = updatePlayers ownerPlayer (jogadores af)
+    newOwner = payPlayer ownerPlayer value
+    ownerPlayer = (fetchPlayer ownerId (jogadores af))
     
 
 attemptChargePlayer :: Jogo -> Player -> Int -> (Either Jogo Jogo)
@@ -169,8 +170,52 @@ attemptChargePlayer bf player value
 solveDebt :: Jogo -> (Either Jogo Jogo)
 solveDebt bf = (Right bf)
 
-bankruptPlayer :: Jogo -> Player -> Jogo
-bankruptPlayer bf _ = endTurn bf
+bankruptPlayer :: Jogo -> Player -> Int -> Jogo 
+-- TODO Nao sei exatamente como tirar o jogador. Zerei a conta dele,
+-- e tirei os turnos dele, mas nao sei como tirar ele do tabuleiro de forma segura, talvez colocar uma informacao de 
+-- que ele faliu seja o suficiente, mas fica para depois.
+bankruptPlayer bf player 0 = af
+  where
+    newDevedor = player {carteira = 0, outOfJailCards = 0, deedsAssets = []}
+
+    newTurnos = (head $ turnos bf) : cycle (DT.delete (playerID player) (take (length $ jogadores bf) (tail $ turnos bf)))
+    newTabuleiro = transferAllTiles (tabuleiro bf) player Bank
+    newPlayers = updatePlayers newDevedor (jogadores bf)
+    af = bf {tabuleiro = newTabuleiro, turnos = newTurnos, jogadores = newPlayers}
+
+
+bankruptPlayer bf player creditorId = af
+  where
+    newDevedor = player {carteira = 0, outOfJailCards = 0, deedsAssets = []}
+    creditor = fetchPlayer creditorId (jogadores bf)
+    newCreditor = creditor {carteira = newCarteira, outOfJailCards = newOutOfJailCards, deedsAssets= newDeeds}
+    newCarteira = (carteira player) + (carteira creditor)
+    newOutOfJailCards = (outOfJailCards player) + (outOfJailCards creditor)
+    newDeeds = (deedsAssets player) ++ (deedsAssets creditor)
+
+    newTurnos = (head $ turnos bf) : cycle (DT.delete (playerID player) (take (length $ jogadores bf) (tail $ turnos bf)))
+    newTabuleiro = transferAllTiles (tabuleiro bf) player newCreditor
+    newPlayers = updatePlayers newDevedor (updatePlayers newCreditor (jogadores bf))
+    af = bf {tabuleiro = newTabuleiro, turnos = newTurnos, jogadores = newPlayers}
+
+transferAllTiles :: [RealTile] -> Player -> Player -> [RealTile]
+transferAllTiles [] _ _ = []
+transferAllTiles ((MTile t):ts) fromPlayer toPlayer = (MTile t) : transferAllTiles ts fromPlayer toPlayer
+transferAllTiles ((LTile t):ts) fromPlayer toPlayer = LTile (tryTransferDeed t fromPlayer toPlayer) : transferAllTiles ts fromPlayer toPlayer
+transferAllTiles ((NBTile t):ts) fromPlayer toPlayer = NBTile (tryTransferDeed t fromPlayer toPlayer) : transferAllTiles ts fromPlayer toPlayer
+
+tryTransferDeed :: Deed a => a -> Player -> Player -> a
+tryTransferDeed t fromPlayer toPlayer = if (owner t) == (playerID fromPlayer)
+    then (trade t) toPlayer
+    else t
+
+-- removePlayer :: Jogo -> Player -> Jogo
+-- removePlayer bf player = bf {jogadores = tryRemovePlayer (jogadores bf) player}
+--   where
+--     tryRemovePlayer [] _ = []
+--     tryRemovePlayer (p:ps) player
+--       | p == player = tryRemovePlayer ps player
+--       | otherwise = p : tryRemovePlayer ps player
 
 offerTile :: Jogo -> RealTile -> Jogo
 offerTile bf rt = af
