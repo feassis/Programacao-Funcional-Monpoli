@@ -121,6 +121,9 @@ instance Eq RealTile where
 instance Ord RealTile where
   a <= b = identifier a <= identifier b
 
+jailPos :: Int
+jailPos = 10
+
 specialTiles :: [MiscTile]
 specialTiles = [
                  MiscTile GO 0 ,
