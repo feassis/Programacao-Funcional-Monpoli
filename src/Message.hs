@@ -100,3 +100,18 @@ alreadyMortgaged n = Message mM justClose
 
 funnyMessageMaker :: Int -> String -> Message
 funnyMessageMaker n funny = Message ("Player "++show n++","++funny) justClose
+
+blankMessage :: Message
+blankMessage = Message "" [""]
+
+youWinMessage :: Int -> Message
+youWinMessage n = Message ("Player "++show n++" Wins! Congradulations!") ["Press esc key to close the game"]
+
+solveDebtMessage :: Int -> Int -> Message
+solveDebtMessage n val = Message ("Player "++show n++" you have a $"++show val++" debt") oM
+  where
+    oM = ["Press the arrows Up or Down to move the cursor"
+          , "Press d to downgrade the current cursor's tile and get money back"
+          , "Press m to sell upgrades and mortgage the current cursor's tile to get money back"
+          , "Press q to declare bankrupcy"
+         ]
