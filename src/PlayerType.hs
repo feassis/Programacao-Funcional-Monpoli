@@ -13,7 +13,8 @@ data Player = Player
     deedsAssets :: [Int], --int Identifier
     isJailed :: Bool,
     jailedTurns :: Int,
-    outOfJailCards :: Int
+    outOfJailCards :: Int,
+    isBankrupted :: Bool
   } | Bank deriving (Show)
 
 instance Eq Player where
@@ -62,7 +63,7 @@ onFirePardon p = p {chainedDoubles = 0} --move logic is delegated to Banker
 
 genIdentifiedPlayer :: Int -> Player --gera player nas condições iniciais
 genIdentifiedPlayer 0 = Bank
-genIdentifiedPlayer i = Player i 0 0 1500 [] False 0 0
+genIdentifiedPlayer i = Player i 0 0 1500 [] False 0 0 False
 
 genStartGamePlayer :: Int -> [Player]
 genStartGamePlayer n = [genIdentifiedPlayer i | i<-[0..n]]
