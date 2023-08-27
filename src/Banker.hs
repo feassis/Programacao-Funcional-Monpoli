@@ -55,7 +55,7 @@ handlekeys (EventKey (Char 'u') Down _ _) game@(Jogo {processo = Nothing}) = upg
 handlekeys (EventKey (Char 'd') Down _ _) game@(Jogo {processo = Nothing}) = downgradeCursorTile game
 handlekeys (EventKey (Char 'm') Down _ _) game@(Jogo {processo = Nothing}) = mortgageCursorTile game
 handlekeys (EventKey (Char 'q') Down _ _) game@(Jogo {processo = Nothing}) = bankruptPlayer game (getNextPlayer game) 0
-handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (chanceChoice !! 1)
+handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (chanceChoice !! 10)
 handlekeys _ game@(Jogo {processo = Nothing}) = game --wrongful input does nothing
 handlekeys event (Jogo {processo = Just f}) = f event
 
@@ -489,13 +489,20 @@ chanceChoice = [
                 , \x -> combineProcess (\y -> attemptChargePlayer y (getNextPlayer x) Bank 15) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Pay poor tax $15")) x
                 , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Bank pays you dividend of $50")) $ (payIngamePlayer x (getNextPlayer x) 50)
                 , \x -> combineProcess (endTurn.giveGOoJFC) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "You get a Get out of Jail Card")) $ x
-                , \x -> combineProcess (`movePlayerCard` ((boardPos (getNextPlayer x)-3) `mod` (length.tabuleiro) x)) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Go back 3 spaces")) x
+                , \x -> combineProcess goBackThree (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Go back 3 spaces")) x
                 , \x -> combineProcess (\y -> attemptChargePlayer y (getNextPlayer x) Bank 15) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Speeding fine $15")) x
                 , \x -> combineProcess (\y -> attemptChargePlayer y (getNextPlayer x) Bank 30) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Pay to support the dev team $30")) x
                 , \x -> combineProcess (`movePlayerCard` 5) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Take a trip to Reading Railroad. If you pass Go, collect $200")) x
                 , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "This event is to thank you for playing our game")) x
                 , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Your building loan matures. Collect $150")) $ (payIngamePlayer x (getNextPlayer x) 150)
               ]
+
+goBackThree :: Jogo -> Jogo
+goBackThree bf = af
+  where
+    player = getNextPlayer bf
+    af = tileEvent $ (setIngamePlayerPos bf player ((boardPos player-3) `mod` (length.tabuleiro) bf)) --not pass go
+
 
 communityChoice :: [Jogo -> Jogo]
 communityChoice = [
