@@ -166,7 +166,22 @@ rentCharge bf player ownerId tile = af
 --    newPlayers = updatePlayers newOwner (jogadores af)
 --    newOwner = payPlayer ownerPlayer value
 --    ownerPlayer = (fetchPlayer ownerId (jogadores af))
-    
+
+calculaRailroadRent :: Player -> Jogo -> Int -- takes owner of tile and the game to return the rent
+calculaRailroadRent player jogo = if railroadsOwned == 0 then 0 
+  else 25 * (2 ^ (railroadsOwned-1))
+    where
+      filterRail (NBTile l) = (kindNB l == RailRoad) && (donoNB l == playerID player)
+      filterRail _ = False
+      railroadsOwned = length $ filter filterRail (tabuleiro jogo)
+
+calculaUtilRent :: Player -> Jogo -> Int -- takes owner of tile and the game to return the rent
+calculaUtilRent player jogo = dice * (2 ^ utilitiesOwned)
+  where
+    filterUtil (NBTile l) = (kindNB l == Util) && (donoNB l == playerID player)
+    filterUtil _ = False
+    utilitiesOwned = length $ filter filterUtil (tabuleiro jogo)
+    dice = head (rngDice jogo)
 
 attemptChargePlayer :: Jogo -> Player -> Player -> Int -> Jogo
 attemptChargePlayer bf debtguy ownerp value

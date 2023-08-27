@@ -6,7 +6,7 @@ import qualified Data.List as DT
 data ColorSet = Brown | LightBlue | Pink | Orange | Red | Yellow | Green | DarkBlue
   deriving Show
 data DeedKind = RailRoad | Util | Build
-  deriving Show
+  deriving (Show, Eq)
 data MiscTileKind = Chance | GO | Jail | Community | FreePark | Tax | ToJail
   deriving (Show)
 
