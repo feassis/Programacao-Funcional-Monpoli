@@ -4,9 +4,9 @@ Advance to Boardwalk
 Advance to Go (Collect $200)
 Advance to Illinois Avenue. If you pass Go, collect $200
 Advance to St. Charles Place. If you pass Go, collect $200
-Advance to the nearest Railroad. If unowned, you may buy it from the Bank. If owned, pay wonder twice the rental to which they are otherwise entitled
-Advance to the nearest Railroad. If unowned, you may buy it from the Bank. If owned, pay wonder twice the rental to which they are otherwise entitled
-Advance token to nearest Utility. If unowned, you may buy it from the Bank. If owned, throw dice and pay owner a total ten times amount thrown.
+Advance to the nearest Railroad.
+Pay poor tax $15
+Advance token to nearest Utility.
 Bank pays you dividend of $50
 Get Out of Jail Free
 Go Back 3 Spaces

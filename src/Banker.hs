@@ -46,6 +46,7 @@ superviseTrade tab p1 p2 deedsid1 deedsid2 = (p1',p2',updatedTiles)
 
 handlekeys :: Event -> Jogo -> Jogo
 handlekeys _ game@(Jogo{gameWon=True}) = game
+handlekeys _ game@(Jogo{message=(Message "" [""]),processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} --hardcoding off the visual bug with acknowledgeMessage
 handlekeys (EventKey (Char 'c') Down _ _) game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- manual close to unimportant message
 handlekeys (EventKey (SpecialKey KeyUp) Down _ _ ) game@(Jogo {processo = Nothing}) = game {cursor=(cursor game+1) `mod` (length.tabuleiro) game}
 handlekeys (EventKey (SpecialKey KeyDown) Down _ _ ) game@(Jogo {processo = Nothing}) = game {cursor=(cursor game-1) `mod` (length.tabuleiro) game}
@@ -55,9 +56,8 @@ handlekeys (EventKey (Char 'd') Down _ _) game@(Jogo {processo = Nothing}) = dow
 handlekeys (EventKey (Char 'm') Down _ _) game@(Jogo {processo = Nothing}) = mortgageCursorTile game
 handlekeys (EventKey (Char 'q') Down _ _) game@(Jogo {processo = Nothing}) = bankruptPlayer game (getNextPlayer game) 0
 handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (chanceChoice !! 1)
---handlekeys _ game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- kill popup
 handlekeys _ game@(Jogo {processo = Nothing}) = game --wrongful input does nothing
-handlekeys event game@(Jogo {processo = Just f}) = f event
+handlekeys event (Jogo {processo = Just f}) = f event
 
 yesNoQuestion :: Event -> Maybe Bool
 yesNoQuestion (EventKey (Char 'y') Down _ _) = Just True
@@ -110,7 +110,7 @@ jailProposalQuery bf (Just True) = tryPayJailFine bf --pay to escape
 jailProposalQuery bf (Just False) = tryJailBreak bf --try rolling for doubles
 
 diceRollMove :: Jogo -> Jogo
-diceRollMove bf = af -- it should also handle rolling doubles
+diceRollMove bf = af
   where
     (r1,r2) = roll2die bf
     af = moveInGamePlayerBy (consume2diceroll bf) r1 r2
@@ -120,11 +120,17 @@ moveInGamePlayerBy bf d1 d2 = af
   where
     roll = d1+d2
     player = (getNextPlayer bf)
-    nplayer = movePlayerBy player roll
+    nplayer
+      | d1==d2 = movePlayerBy (onFireGuilt player) roll
+      | otherwise = movePlayerBy (onFirePardon player) roll
+    nturns
+      | d1==d2 = (head (turnos bf)):(turnos bf)
+      | otherwise = turnos bf
     players = updatePlayers nplayer (jogadores bf)
     af
-      | boardPos player > boardPos nplayer = tileEvent.passGoEvent $ bf {jogadores = players, dice1 = head $ show d1, dice2 = head $ show d2}
-      | otherwise = tileEvent $ bf {jogadores = players, dice1 = head $ show d1, dice2 = head $ show d2}
+      | chainedDoubles nplayer >=3 = sendToJail bf True
+      | boardPos player > boardPos nplayer = tileEvent.passGoEvent $ bf {jogadores = players,turnos=nturns, dice1 = head $ show d1, dice2 = head $ show d2}
+      | otherwise = tileEvent $ bf {jogadores = players,turnos=nturns, dice1 = head $ show d1, dice2 = head $ show d2}
 
 tileEvent :: Jogo -> Jogo
 tileEvent bf = af
@@ -137,13 +143,13 @@ triggerTile bf (MTile m) = activateMisc bf m
 triggerTile bf t@(NBTile nb)
   | owner nb == 0 && carteira player >= price nb = offerTile bf t --offer to buy
   | playerID player /= owner nb = utilrailRentCharge bf player nb--charge player if unmortgaged
-  | otherwise = endTurn bf --just end turn
+  | otherwise = endTurn $ bf --just end turn
   where
     player = getNextPlayer bf
 triggerTile bf t@(LTile l)
   | owner l == 0 = offerTile bf t --offer to buy
   | playerID player /= owner l = rentCharge bf player (owner l) l --charge player if unmortgaged
-  | otherwise = endTurn bf --just end turn
+  | otherwise = endTurn $ bf --just end turn
   where
     player = getNextPlayer bf
 
@@ -160,9 +166,9 @@ utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=Util}) = af {rngDice = ta
     ownerId = owner nb
     value = calculaUtilRent (fetchPlayer ownerId (jogadores bf)) bf
     ownerp = fetchPlayer ownerId (jogadores bf)
-    af = attemptChargePlayer bf jogador ownerp value
+    af = attemptChargePlayer bf{rngDice = tail (rngDice bf)} jogador ownerp value
 
-utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=Build}) = bf --this guy should not exist
+utilrailRentCharge bf _ (NonBuildable {kindNB=Build}) = bf --this guy should not exist
 
 rentCharge :: Jogo -> Player -> Int -> Land -> Jogo
 rentCharge bf player ownerId tile = af
@@ -170,14 +176,6 @@ rentCharge bf player ownerId tile = af
     value = (aluguel tile) !! (stage tile)
     ownerp = fetchPlayer ownerId (jogadores bf)
     af = attemptChargePlayer bf player ownerp value
---  where
---    af = f (attemptChargePlayer bf player value)
---    value = (aluguel tile) !! (stage tile)
---    f (Left bf') = bankruptPlayer bf' player ownerId
---    f (Right bf') = bf'
---    newPlayers = updatePlayers newOwner (jogadores af)
---    newOwner = payPlayer ownerPlayer value
---    ownerPlayer = (fetchPlayer ownerId (jogadores af))
 
 calculaRailroadRent :: Player -> Jogo -> Int -- takes owner of tile and the game to return the rent
 calculaRailroadRent player jogo = if railroadsOwned == 0 then 0 
@@ -209,7 +207,9 @@ attemptChargePlayer bf debtguy ownerp value
     bff = bf{message=solveDebtMessage (playerID debtguy) value}
 
 solveDebt :: Jogo -> Player -> Player -> Int -> Event -> Jogo
-solveDebt bf debtguy ownerp val (EventKey (Char 'c') Down _ _ ) = bf{message=solveDebtMessage (playerID debtguy) val,processo=Just $ solveDebt bf debtguy ownerp val}
+solveDebt bf debtguy ownerp val (EventKey (Char 'c') Down _ _ ) = bf'{processo=Just $ solveDebt bf' debtguy ownerp val}
+  where
+    bf' = bf{message=solveDebtMessage (playerID debtguy) val}
 solveDebt bf debtguy ownerp _ (EventKey (Char 'q') Down _ _) = bankruptPlayer bf debtguy (playerID ownerp)
 solveDebt bf debtguy ownerp val (EventKey (SpecialKey KeyUp) Down _ _ ) = bf' {processo=Just $ solveDebt bf' debtguy ownerp val}
   where
@@ -224,7 +224,7 @@ solveDebt bf debtguy ownerp val (EventKey (Char 'd') Down _ _ ) = af
     newPlayers = updatePlayers newPlayer (jogadores bf')
     newPlayer = chargePlayer debtguy' val 
     af
-      | carteira debtguy' < val = bf'{processo=Just $ solveDebt bf debtguy ownerp val}
+      | carteira debtguy' < val = bf'{processo=Just $ solveDebt bf' debtguy ownerp val}
       | otherwise = endTurn $ payIngamePlayer bf'{jogadores=newPlayers} ownerp val 
 solveDebt bf debtguy ownerp val (EventKey (Char 'm') Down _ _ ) = af
   where
@@ -233,7 +233,7 @@ solveDebt bf debtguy ownerp val (EventKey (Char 'm') Down _ _ ) = af
     newPlayers = updatePlayers newPlayer (jogadores bf')
     newPlayer = chargePlayer debtguy' val 
     af
-      | carteira debtguy' < val = bf'{processo=Just $ solveDebt bf debtguy ownerp val}
+      | carteira debtguy' < val = bf'{processo=Just $ solveDebt bf' debtguy ownerp val}
       | otherwise = endTurn $ payIngamePlayer bf'{jogadores=newPlayers} ownerp val 
 solveDebt bf debtguy ownerp val _ = bf{processo=Just $ solveDebt bf debtguy ownerp val} --redo retry
 
@@ -252,52 +252,6 @@ bankruptPlayer bf loser creditorId = af --people can only bankrupt on their turn
     af
       | length remPlayers == 1 = bf{tabuleiro=nboard,jogadores=nplayers,turnos=nturns, message=youWinMessage (head remPlayers),gameWon=True,winner=head remPlayers}
       | otherwise = endTurn bf{tabuleiro=nboard,jogadores=nplayers,turnos=nturns}
-    
--- TODO Nao sei exatamente como tirar o jogador. Zerei a conta dele,
--- e tirei os turnos dele, mas nao sei como tirar ele do tabuleiro de forma segura, talvez colocar uma informacao de 
--- que ele faliu seja o suficiente, mas fica para depois.
---bankruptPlayer bf player 0 = af
---  where
---    newDevedor = player {carteira = 0, outOfJailCards = 0, deedsAssets = []}
---
---    newTurnos = (head $ turnos bf) : cycle (DT.delete (playerID player) (take (length $ jogadores bf) (tail $ turnos bf)))
---    newTabuleiro = transferAllTiles (tabuleiro bf) player Bank
---    newPlayers = updatePlayers newDevedor (jogadores bf)
---    af = bf {tabuleiro = newTabuleiro, turnos = newTurnos, jogadores = newPlayers}
-
-
---bankruptPlayer bf player creditorId = af
---  where
---    newDevedor = player {carteira = 0, outOfJailCards = 0, deedsAssets = []}
---    creditor = fetchPlayer creditorId (jogadores bf)
---    newCreditor = creditor {carteira = newCarteira, outOfJailCards = newOutOfJailCards, deedsAssets= newDeeds}
---    newCarteira = (carteira player) + (carteira creditor)
---    newOutOfJailCards = (outOfJailCards player) + (outOfJailCards creditor)
---    newDeeds = (deedsAssets player) ++ (deedsAssets creditor)
-
---    newTurnos = (head $ turnos bf) : cycle (DT.delete (playerID player) (take (length $ jogadores bf) (tail $ turnos bf)))
---    newTabuleiro = transferAllTiles (tabuleiro bf) player newCreditor
---    newPlayers = updatePlayers newDevedor (updatePlayers newCreditor (jogadores bf))
---    af = bf {tabuleiro = newTabuleiro, turnos = newTurnos, jogadores = newPlayers}
-
-transferAllTiles :: [RealTile] -> Player -> Player -> [RealTile]
-transferAllTiles [] _ _ = []
-transferAllTiles ((MTile t):ts) fromPlayer toPlayer = (MTile t) : transferAllTiles ts fromPlayer toPlayer
-transferAllTiles ((LTile t):ts) fromPlayer toPlayer = LTile (tryTransferDeed t fromPlayer toPlayer) : transferAllTiles ts fromPlayer toPlayer
-transferAllTiles ((NBTile t):ts) fromPlayer toPlayer = NBTile (tryTransferDeed t fromPlayer toPlayer) : transferAllTiles ts fromPlayer toPlayer
-
-tryTransferDeed :: Deed a => a -> Player -> Player -> a
-tryTransferDeed t fromPlayer toPlayer = if (owner t) == (playerID fromPlayer)
-    then (trade t) toPlayer
-    else t
-
--- removePlayer :: Jogo -> Player -> Jogo
--- removePlayer bf player = bf {jogadores = tryRemovePlayer (jogadores bf) player}
---   where
---     tryRemovePlayer [] _ = []
---     tryRemovePlayer (p:ps) player
---       | p == player = tryRemovePlayer ps player
---       | otherwise = p : tryRemovePlayer ps player
 
 offerTile :: Jogo -> RealTile -> Jogo
 offerTile bf rt = af
@@ -484,8 +438,9 @@ sendToJail bf onfire = af
     player = getNextPlayer bf
     nplayer = onFirePardon.enJail $ move player jailPos
     nps = updatePlayers nplayer (jogadores bf)
+    nturns = (head (turnos bf)):(dropWhile ((head (turnos bf))==) (turnos bf)) --clear onfire extra turns
     arrestMessage = goToJailMessage (playerID player) onfire (head.rngChanceCommunity $ bf)
-    af = combineProcess endTurn (`showFunnyMessage` arrestMessage) (consumeCCrng bf{jogadores=nps})
+    af = combineProcess endTurn (`showFunnyMessage` arrestMessage) (consumeCCrng bf{jogadores=nps,turnos=nturns})
 
 payIngamePlayer :: Jogo -> Player -> Int -> Jogo
 payIngamePlayer bf p v = bf{jogadores=nps}
@@ -529,16 +484,16 @@ chanceChoice = [
                 , \x -> combineProcess (`movePlayerCard` 0) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to Go (Collect $200)")) x
                 , \x -> combineProcess (`movePlayerCard` 24) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to Illinois Avenue. If you pass Go, collect $200")) x
                 , \x -> combineProcess (`movePlayerCard` 11) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to St. Charles Place. If you pass Go, collect $200")) x
-                , debugDefault
-                , debugDefault
-                , debugDefault
+                , \x -> combineProcess (`movePlayerCard` (nearestRR (boardPos $ getNextPlayer x))) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to the nearest Railroad. If you pass Go, collect $200")) x
+                , \x -> combineProcess (`movePlayerCard` (nearestUtil (boardPos $ getNextPlayer x))) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to the nearest Railroad. If you pass Go, collect $200")) x
+                , \x -> combineProcess (\y -> attemptChargePlayer y (getNextPlayer x) Bank 15) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Pay poor tax $15")) x
                 , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Bank pays you dividend of $50")) $ (payIngamePlayer x (getNextPlayer x) 50)
                 , \x -> combineProcess (endTurn.giveGOoJFC) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "You get a Get out of Jail Card")) $ x
                 , \x -> combineProcess (`movePlayerCard` ((boardPos (getNextPlayer x)-3) `mod` (length.tabuleiro) x)) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Go back 3 spaces")) x
-                , debugDefault
-                , debugDefault
+                , \x -> combineProcess (\y -> attemptChargePlayer y (getNextPlayer x) Bank 15) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Speeding fine $15")) x
+                , \x -> combineProcess (\y -> attemptChargePlayer y (getNextPlayer x) Bank 30) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Pay to support the dev team $30")) x
                 , \x -> combineProcess (`movePlayerCard` 5) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Take a trip to Reading Railroad. If you pass Go, collect $200")) x
-                , debugDefault
+                , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "This event is to thank you for playing our game")) x
                 , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Your building loan matures. Collect $150")) $ (payIngamePlayer x (getNextPlayer x) 150)
               ]
 
@@ -547,20 +502,34 @@ communityChoice = [
                   (`sendToJail` False)
                   , \x -> combineProcess (`movePlayerCard` 0) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Advance to Go (Collect $200)")) x
                   , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Bank error in your favor. Collect $200")) $ (payIngamePlayer x (getNextPlayer x) 200)
-                  , debugDefault
+                  , \x -> combineProcess (\y -> attemptChargePlayer y (getNextPlayer x) Bank 50) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Doctor's fee. Pay $50")) x
                   , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "From sale of stock you get $50")) $ (payIngamePlayer x (getNextPlayer x) 50)
                   , \x -> combineProcess (endTurn.giveGOoJFC) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "You get a Get out of Jail Card")) $ x
                   , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Holiday fund matures. Receive $100")) $ (payIngamePlayer x (getNextPlayer x) 100)
                   , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Income tax refund. Collect $20")) $ (payIngamePlayer x (getNextPlayer x) 20)
-                  , debugDefault
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "This event is to thank you for playing our game")) x
                   , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Life insurance matures. Collect $100")) $ (payIngamePlayer x (getNextPlayer x) 100)
-                  , debugDefault
-                  , debugDefault
+                  , \x -> combineProcess (\y -> attemptChargePlayer y (getNextPlayer x) Bank 100) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Pay hospital fees of $100")) x
+                  , \x -> combineProcess (\y -> attemptChargePlayer y (getNextPlayer x) Bank 50) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Pay school fees of $50")) x
                   , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "Receive $25 consultancy fee")) $ (payIngamePlayer x (getNextPlayer x) 25)
-                  , debugDefault
+                  , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "This event will be implemented in a future dlc costing $50")) x
                   , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "You have won second prize in a beauty contest. Collect $10")) $ (payIngamePlayer x (getNextPlayer x) 10)
                   , \x -> combineProcess endTurn (`showFunnyMessage` (funnyMessageMaker (head.turnos $ x) "You inherit $100")) $ (payIngamePlayer x (getNextPlayer x) 100)
                 ]
+
+nearestRR :: Int -> Int
+nearestRR ppos
+  | ppos<=5 = 5
+  | ppos<=15 = 15
+  | ppos<=25 = 25
+  | ppos<=35 = 35
+  | otherwise = 5
+
+nearestUtil:: Int -> Int
+nearestUtil ppos
+  | ppos <= 12 = 12
+  | ppos <= 28 = 28
+  | otherwise = 12
 
 activateMisc :: Jogo -> MiscTile -> Jogo
 activateMisc bf m = case kindM m of
@@ -573,7 +542,9 @@ activateMisc bf m = case kindM m of
                       _ -> getCorrectTax bf (identifier m)
 
 getCorrectTax :: Jogo -> Int -> Jogo
-getCorrectTax bf pos = debugDefault bf
+getCorrectTax bf pos
+  | pos == 4 = combineProcess (\y -> attemptChargePlayer y (getNextPlayer bf) Bank 200) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ bf) "Income tax. Pay $200")) bf
+  | otherwise = combineProcess (\y -> attemptChargePlayer y (getNextPlayer bf) Bank 100) (`showFunnyMessage` (funnyMessageMaker (head.turnos $ bf) "Luxury tax. Pay $100")) bf
 
 tryPayJailFine :: Jogo -> Jogo
 tryPayJailFine bf = af
