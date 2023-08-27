@@ -27,10 +27,8 @@ library
   exposed-modules:
       Banker
       Jogo
-      Lib
       Message
       PlayerType
-      SupportMethods
       TileType
       Window
   other-modules:
