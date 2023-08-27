@@ -13,7 +13,7 @@ main :: IO ()
 
 
 main = do
-  let nPlayers = 2
+  let nPlayers = 4
   -- print $ id $! initialTabuleiro
   semente1 <- getStdGen
   let dicerng = (randomRs (1,6) semente1 :: [Int])
