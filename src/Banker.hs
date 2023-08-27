@@ -24,7 +24,7 @@ movePlayerBy p roll
 
 superviseTrade :: [RealTile] -> Player -> Player -> [Int] -> [Int] -> (Player,Player,[RealTile])
 superviseTrade _ Bank Bank _ _ = (Bank,Bank,[]) -- joke:insider trading return reportToAuthoratiesAndSue
-superviseTrade x Bank p2 y z = superviseTrade x p2 Bank y z
+superviseTrade x Bank p2 y z = superviseTrade x p2 Bank z y
 superviseTrade tab p1 Bank deedsid1 deedsid2 = (p1', Bank, updatedTiles)
   where
     deeds1 = retrieveTiles deedsid1 tab
@@ -45,6 +45,7 @@ superviseTrade tab p1 p2 deedsid1 deedsid2 = (p1',p2',updatedTiles)
 
 
 handlekeys :: Event -> Jogo -> Jogo
+handlekeys _ game@(Jogo{gameWon=True}) = game
 handlekeys (EventKey (Char 'c') Down _ _) game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- manual close to unimportant message
 handlekeys (EventKey (SpecialKey KeyUp) Down _ _ ) game@(Jogo {processo = Nothing}) = game {cursor=(cursor game+1) `mod` (length.tabuleiro) game}
 handlekeys (EventKey (SpecialKey KeyDown) Down _ _ ) game@(Jogo {processo = Nothing}) = game {cursor=(cursor game-1) `mod` (length.tabuleiro) game}
@@ -52,8 +53,8 @@ handlekeys (EventKey (Char 'r') Down _ _) game@(Jogo {processo = Nothing}) = dic
 handlekeys (EventKey (Char 'u') Down _ _) game@(Jogo {processo = Nothing}) = upgradeCursorTile game -- attempt to upgrade cursor's tile
 handlekeys (EventKey (Char 'd') Down _ _) game@(Jogo {processo = Nothing}) = downgradeCursorTile game
 handlekeys (EventKey (Char 'm') Down _ _) game@(Jogo {processo = Nothing}) = mortgageCursorTile game
-handlekeys (EventKey (Char 'q') Down _ _) game@(Jogo {processo = Nothing}) = undefined
-handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (\g -> bankruptPlayer g (fetchPlayer 1 (jogadores game)) 2)
+handlekeys (EventKey (Char 'q') Down _ _) game@(Jogo {processo = Nothing}) = bankruptPlayer game (getNextPlayer game) 0
+handlekeys (EventKey (Char 'f') Down _ _) game@(Jogo {processo = Nothing}) = debugForce game (chanceChoice !! 1)
 --handlekeys _ game@(Jogo {processo = Nothing}) = game {message = (freeRoamMessage.head) (turnos game)} -- kill popup
 handlekeys _ game@(Jogo {processo = Nothing}) = game --wrongful input does nothing
 handlekeys event game@(Jogo {processo = Just f}) = f event
@@ -64,7 +65,7 @@ yesNoQuestion (EventKey (Char 'n') Down _ _) = Just False
 yesNoQuestion _ = Nothing
 
 acknowledgeMessage :: Jogo -> Event -> Jogo
-acknowledgeMessage game (EventKey (Char 'c') Down _ _) = game{message = (freeRoamMessage.head) (turnos game)}
+acknowledgeMessage game (EventKey (Char 'c') Down _ _) = game{message = blankMessage}
 acknowledgeMessage game _ = game{processo = Just $ acknowledgeMessage game} --redo, retry
 
 endTurn :: Jogo -> Jogo
@@ -130,7 +131,6 @@ tileEvent bf = af
   where
     rt = getTriggeredTile bf
     af = triggerTile bf rt
-    --af = endTurn bf --dummy id to test endturn
 
 triggerTile :: Jogo -> RealTile -> Jogo
 triggerTile bf (MTile m) = activateMisc bf m
@@ -147,56 +147,107 @@ triggerTile bf t@(LTile l)
   where
     player = getNextPlayer bf
 
+utilrailRentCharge :: Jogo -> Player -> NonBuildable -> Jogo
+utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=RailRoad}) = bf
+utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=Util}) = bf
+utilrailRentCharge bf jogador nb@(NonBuildable {kindNB=Build}) = bf --this guy should not exist
+
 rentCharge :: Jogo -> Player -> Int -> Land -> Jogo
-rentCharge bf player ownerId tile = endTurn $ af {jogadores = newPlayers}
+rentCharge bf player ownerId tile = af
   where
-    af = f (attemptChargePlayer bf player value)
     value = (aluguel tile) !! (stage tile)
-    f (Left bf') = bankruptPlayer bf' player ownerId
-    f (Right bf') = bf'
-    newPlayers = updatePlayers ownerPlayer (jogadores af)
-    newOwner = payPlayer ownerPlayer value
-    ownerPlayer = (fetchPlayer ownerId (jogadores af))
+    ownerp = fetchPlayer ownerId (jogadores bf)
+    af = attemptChargePlayer bf player ownerp value
+--  where
+--    af = f (attemptChargePlayer bf player value)
+--    value = (aluguel tile) !! (stage tile)
+--    f (Left bf') = bankruptPlayer bf' player ownerId
+--    f (Right bf') = bf'
+--    newPlayers = updatePlayers newOwner (jogadores af)
+--    newOwner = payPlayer ownerPlayer value
+--    ownerPlayer = (fetchPlayer ownerId (jogadores af))
     
 
-attemptChargePlayer :: Jogo -> Player -> Int -> (Either Jogo Jogo)
-attemptChargePlayer bf player value
-  | carteira player < value = solveDebt bf
-  | otherwise = Right $ bf {jogadores = newPlayers}
+attemptChargePlayer :: Jogo -> Player -> Player -> Int -> Jogo
+attemptChargePlayer bf debtguy ownerp value
+  | carteira debtguy < value = bff{processo=Just $ solveDebt bff debtguy ownerp value}
+  | otherwise = endTurn $ payIngamePlayer bf{jogadores=newPlayers} ownerp value
   where
     newPlayers = updatePlayers newPlayer (jogadores bf)
-    newPlayer = chargePlayer player value
+    newPlayer = chargePlayer debtguy value 
+    bff = bf{message=solveDebtMessage (playerID debtguy) value}
 
-solveDebt :: Jogo -> (Either Jogo Jogo)
-solveDebt bf = (Right bf)
+solveDebt :: Jogo -> Player -> Player -> Int -> Event -> Jogo
+solveDebt bf debtguy ownerp val (EventKey (Char 'c') Down _ _ ) = bf{message=solveDebtMessage (playerID debtguy) val,processo=Just $ solveDebt bf debtguy ownerp val}
+solveDebt bf debtguy ownerp _ (EventKey (Char 'q') Down _ _) = bankruptPlayer bf debtguy (playerID ownerp)
+solveDebt bf debtguy ownerp val (EventKey (SpecialKey KeyUp) Down _ _ ) = bf' {processo=Just $ solveDebt bf' debtguy ownerp val}
+  where
+    bf' = bf {cursor=(cursor bf+1) `mod` (length.tabuleiro) bf}
+solveDebt bf debtguy ownerp val (EventKey (SpecialKey KeyDown) Down _ _ ) = bf'{processo=Just $ solveDebt bf' debtguy ownerp val}
+  where
+    bf' = bf {cursor=(cursor bf-1) `mod` (length.tabuleiro) bf}
+solveDebt bf debtguy ownerp val (EventKey (Char 'd') Down _ _ ) = af
+  where
+    bf' = downgradeCursorTile bf
+    debtguy' = fetchPlayer (playerID debtguy) (jogadores bf')
+    newPlayers = updatePlayers newPlayer (jogadores bf')
+    newPlayer = chargePlayer debtguy' val 
+    af
+      | carteira debtguy' < val = bf'{processo=Just $ solveDebt bf debtguy ownerp val}
+      | otherwise = endTurn $ payIngamePlayer bf'{jogadores=newPlayers} ownerp val 
+solveDebt bf debtguy ownerp val (EventKey (Char 'm') Down _ _ ) = af
+  where
+    bf' = mortgageCursorTile bf
+    debtguy' = fetchPlayer (playerID debtguy) (jogadores bf')
+    newPlayers = updatePlayers newPlayer (jogadores bf')
+    newPlayer = chargePlayer debtguy' val 
+    af
+      | carteira debtguy' < val = bf'{processo=Just $ solveDebt bf debtguy ownerp val}
+      | otherwise = endTurn $ payIngamePlayer bf'{jogadores=newPlayers} ownerp val 
+solveDebt bf debtguy ownerp val _ = bf{processo=Just $ solveDebt bf debtguy ownerp val} --redo retry
 
-bankruptPlayer :: Jogo -> Player -> Int -> Jogo 
+bankruptPlayer :: Jogo -> Player -> Int -> Jogo
+bankruptPlayer bf loser creditorId = af --people can only bankrupt on their turn
+  where
+    nowner = fetchPlayer creditorId (jogadores bf)
+    bla = case loser of
+            Bank -> Bank -- bank shouldnt be bankrupted
+            _ -> loser {isBankrupted=True}
+    (loser',nowner',ntiles) = superviseTrade (tabuleiro bf) bla nowner (deedsAssets loser) []
+    nboard = serializedUpdateBoard (tabuleiro bf) ntiles
+    remPlayers = takeWhile ((head $ turnos bf)/=) (tail (turnos bf))
+    nturns = (head $ turnos bf) : cycle remPlayers
+    nplayers = serializedUpdateplayers [loser',nowner'] (jogadores bf)
+    af
+      | length remPlayers == 1 = bf{tabuleiro=nboard,jogadores=nplayers,turnos=nturns, message=youWinMessage (head remPlayers),gameWon=True,winner=head remPlayers}
+      | otherwise = endTurn bf{tabuleiro=nboard,jogadores=nplayers,turnos=nturns}
+    
 -- TODO Nao sei exatamente como tirar o jogador. Zerei a conta dele,
 -- e tirei os turnos dele, mas nao sei como tirar ele do tabuleiro de forma segura, talvez colocar uma informacao de 
 -- que ele faliu seja o suficiente, mas fica para depois.
-bankruptPlayer bf player 0 = af
-  where
-    newDevedor = player {carteira = 0, outOfJailCards = 0, deedsAssets = []}
+--bankruptPlayer bf player 0 = af
+--  where
+--    newDevedor = player {carteira = 0, outOfJailCards = 0, deedsAssets = []}
+--
+--    newTurnos = (head $ turnos bf) : cycle (DT.delete (playerID player) (take (length $ jogadores bf) (tail $ turnos bf)))
+--    newTabuleiro = transferAllTiles (tabuleiro bf) player Bank
+--    newPlayers = updatePlayers newDevedor (jogadores bf)
+--    af = bf {tabuleiro = newTabuleiro, turnos = newTurnos, jogadores = newPlayers}
 
-    newTurnos = (head $ turnos bf) : cycle (DT.delete (playerID player) (take (length $ jogadores bf) (tail $ turnos bf)))
-    newTabuleiro = transferAllTiles (tabuleiro bf) player Bank
-    newPlayers = updatePlayers newDevedor (jogadores bf)
-    af = bf {tabuleiro = newTabuleiro, turnos = newTurnos, jogadores = newPlayers}
 
+--bankruptPlayer bf player creditorId = af
+--  where
+--    newDevedor = player {carteira = 0, outOfJailCards = 0, deedsAssets = []}
+--    creditor = fetchPlayer creditorId (jogadores bf)
+--    newCreditor = creditor {carteira = newCarteira, outOfJailCards = newOutOfJailCards, deedsAssets= newDeeds}
+--    newCarteira = (carteira player) + (carteira creditor)
+--    newOutOfJailCards = (outOfJailCards player) + (outOfJailCards creditor)
+--    newDeeds = (deedsAssets player) ++ (deedsAssets creditor)
 
-bankruptPlayer bf player creditorId = af
-  where
-    newDevedor = player {carteira = 0, outOfJailCards = 0, deedsAssets = []}
-    creditor = fetchPlayer creditorId (jogadores bf)
-    newCreditor = creditor {carteira = newCarteira, outOfJailCards = newOutOfJailCards, deedsAssets= newDeeds}
-    newCarteira = (carteira player) + (carteira creditor)
-    newOutOfJailCards = (outOfJailCards player) + (outOfJailCards creditor)
-    newDeeds = (deedsAssets player) ++ (deedsAssets creditor)
-
-    newTurnos = (head $ turnos bf) : cycle (DT.delete (playerID player) (take (length $ jogadores bf) (tail $ turnos bf)))
-    newTabuleiro = transferAllTiles (tabuleiro bf) player newCreditor
-    newPlayers = updatePlayers newDevedor (updatePlayers newCreditor (jogadores bf))
-    af = bf {tabuleiro = newTabuleiro, turnos = newTurnos, jogadores = newPlayers}
+--    newTurnos = (head $ turnos bf) : cycle (DT.delete (playerID player) (take (length $ jogadores bf) (tail $ turnos bf)))
+--    newTabuleiro = transferAllTiles (tabuleiro bf) player newCreditor
+--    newPlayers = updatePlayers newDevedor (updatePlayers newCreditor (jogadores bf))
+--    af = bf {tabuleiro = newTabuleiro, turnos = newTurnos, jogadores = newPlayers}
 
 transferAllTiles :: [RealTile] -> Player -> Player -> [RealTile]
 transferAllTiles [] _ _ = []
