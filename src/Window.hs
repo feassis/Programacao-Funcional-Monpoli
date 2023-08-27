@@ -394,30 +394,30 @@ player2Text player = [
 
 player3Text :: Player -> [Picture]
 player3Text player = [
-                renderTxt (- widthF * 0.35) (heightF * 0.35) yellow "Player",
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.33) white ("id: " ++ show(playerID player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.315) white ("board pos: " ++ show(boardPos player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.30) white ("chained doubles: " ++ show(chainedDoubles player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.285) white ("carteira: " ++ show(carteira player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.27) white ("deeds: " ++ show(deedsAssets player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.255) white ("isJailed: " ++ show(isJailed player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.24) white ("jailed turns: " ++ show(jailedTurns player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.225) white ("outOfJailCard: " ++ show(outOfJailCards player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.21) white ("isBankrupted: " ++ show(isBankrupted player ))
+                renderTxt (- widthF * 0.45) (heightF * (-0.03)) yellow "Player",
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.05)) white ("id: " ++ show(playerID player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.065)) white ("board pos: " ++ show(boardPos player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.08)) white ("chained doubles: " ++ show(chainedDoubles player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.095)) white ("carteira: " ++ show(carteira player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.11)) white ("deeds: " ++ show(deedsAssets player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.125)) white ("isJailed: " ++ show(isJailed player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.14)) white ("jailed turns: " ++ show(jailedTurns player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.155)) white ("outOfJailCard: " ++ show(outOfJailCards player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.17)) white ("isBankrupted: " ++ show(isBankrupted player ))
         ]
 
 player4Text :: Player -> [Picture]
 player4Text player = [
-                renderTxt (- widthF * 0.35) (heightF * 0.16) cyan "Player",
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.14) white ("id: " ++ show(playerID player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.125) white ("board pos: " ++ show(boardPos player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.11) white ("chained doubles: " ++ show(chainedDoubles player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.095) white ("carteira: " ++ show(carteira player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.08) white ("deeds: " ++ show(deedsAssets player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.065) white ("isJailed: " ++ show(isJailed player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.05) white ("jailed turns: " ++ show(jailedTurns player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.035) white ("Out Of Jail Card: " ++ show(outOfJailCards player )),
-                renderTxtSmall (- widthF * 0.35) (heightF * 0.02) white ("isBankrupted: " ++ show(isBankrupted player ))
+                renderTxt (- widthF * 0.45) (heightF * (-0.22)) cyan "Player",
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.235)) white ("id: " ++ show(playerID player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.25)) white ("board pos: " ++ show(boardPos player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.265)) white ("chained doubles: " ++ show(chainedDoubles player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.28)) white ("carteira: " ++ show(carteira player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.295)) white ("deeds: " ++ show(deedsAssets player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.31)) white ("isJailed: " ++ show(isJailed player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.325)) white ("jailed turns: " ++ show(jailedTurns player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.34)) white ("Out Of Jail Card: " ++ show(outOfJailCards player )),
+                renderTxtSmall (- widthF * 0.45) (heightF * (-0.355)) white ("isBankrupted: " ++ show(isBankrupted player ))
         ]
 
 
