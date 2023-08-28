@@ -161,11 +161,11 @@ testRealTile :: RealTile
 testRealTile = NBTile testNonBuildable
 
 currentTileText :: RealTile -> [Picture] -- mudar para receber Real
-currentTileText (LTile l) = [renderTxt (widthF * 0.25) (heightF * 0.35) blue "Current Tile"] ++
+currentTileText (LTile l) = [renderTxt (widthF * 0.25) (heightF * 0.35) magenta "Current Tile"] ++
                 drawLandTileText (widthF * 0.25) (heightF * 0.33) l
-currentTileText (NBTile l) = [renderTxt (widthF * 0.25) (heightF * 0.35) blue "Current Tile"] ++
+currentTileText (NBTile l) = [renderTxt (widthF * 0.25) (heightF * 0.35) magenta "Current Tile"] ++
                 drawNonBuildableText (widthF * 0.25) (heightF * 0.33) l
-currentTileText (MTile l) = [renderTxt (widthF * 0.25) (heightF * 0.35) blue "Current Tile"] ++
+currentTileText (MTile l) = [renderTxt (widthF * 0.25) (heightF * 0.35) magenta "Current Tile"] ++
                 drawMiscTile (widthF * 0.25) (heightF * 0.33) l
 
 testMiscTile :: MiscTile
@@ -181,11 +181,11 @@ testNonBuildable = NonBuildable  {donoNB = -1,
         isMorgagedNB = False}
 
 zoomTileText ::RealTile -> [Picture]
-zoomTileText (NBTile l) = [renderTxt (widthF * 0.25) (heightF * 0.10) blue "Zoom Tile"] ++
+zoomTileText (NBTile l) = [renderTxt (widthF * 0.25) (heightF * 0.10) magenta "Zoom Tile"] ++
                 drawNonBuildableText (widthF * 0.25) (heightF * 0.085) l
-zoomTileText (LTile l) = [renderTxt (widthF * 0.25) (heightF * 0.10) blue "Zoom Tile"] ++
+zoomTileText (LTile l) = [renderTxt (widthF * 0.25) (heightF * 0.10) magenta "Zoom Tile"] ++
                 drawLandTileText (widthF * 0.25) (heightF * 0.085) l
-zoomTileText (MTile l) = [renderTxt (widthF * 0.25) (heightF * 0.10) blue "Zoom Tile"] ++
+zoomTileText (MTile l) = [renderTxt (widthF * 0.25) (heightF * 0.10) magenta "Zoom Tile"] ++
                 drawMiscTile  (widthF * 0.25) (heightF * 0.085) l
 
 drawMiscTile :: Float -> Float -> MiscTile -> [Picture]
@@ -261,10 +261,10 @@ playersVisuals players = (playersText players) ++ (playersTokens players)
 
 
 playersTokens :: [Player] -> [Picture]
-playersTokens [player1] = (playerToken player1 blue)
-playersTokens [player1, player2] = (playerToken player1 blue) ++ (playerToken player2 green) 
-playersTokens [player1, player2, player3] = (playerToken player1 blue) ++ (playerToken player2 green) ++ (playerToken player3 yellow) 
-playersTokens [player1, player2, player3, player4] = (playerToken player1 blue) ++ (playerToken player2 green) ++ (playerToken player3 yellow) ++ (playerToken player4 cyan) 
+playersTokens [player1] = (playerToken player1 red)
+playersTokens [player1, player2] = (playerToken player1 red) ++ (playerToken player2 green) 
+playersTokens [player1, player2, player3] = (playerToken player1 red) ++ (playerToken player2 green) ++ (playerToken player3 yellow) 
+playersTokens [player1, player2, player3, player4] = (playerToken player1 red) ++ (playerToken player2 green) ++ (playerToken player3 yellow) ++ (playerToken player4 cyan) 
 
 getSelectionPosition :: [(Float, Float)]
 getSelectionPosition = [
@@ -366,7 +366,7 @@ playersText [player1, player2, player3, player4] = (player1Text player1) ++ (pla
 
 player1Text :: Player -> [Picture]
 player1Text player = [
-                renderTxt (- widthF * 0.45) (heightF * 0.35) blue "Player",
+                renderTxt (- widthF * 0.45) (heightF * 0.35) red "Player",
                 renderTxtSmall (- widthF * 0.45) (heightF * 0.33) white ("id: " ++ show(playerID player )),
                 renderTxtSmall (- widthF * 0.45) (heightF * 0.315) white ("board pos: " ++ show(boardPos player )),
                 renderTxtSmall (- widthF * 0.45) (heightF * 0.30) white ("chained doubles: " ++ show(chainedDoubles player )),
@@ -492,9 +492,9 @@ blueHouses = [
 
 greenHouses :: [Picture]
 greenHouses = [
-                verticalLineColored (cellSize/2 * 9  +8) (cellSize *(4)) (orange),
-                verticalLineColored (cellSize/2 * 9  +8) (cellSize *(3)) (orange),
-                verticalLineColored (cellSize/2 * 9  +8) (cellSize *(1)) (orange)
+                verticalLineColored (cellSize/2 * 9  +8) (cellSize *(4)) (green),
+                verticalLineColored (cellSize/2 * 9  +8) (cellSize *(3)) (green),
+                verticalLineColored (cellSize/2 * 9  +8) (cellSize *(1)) (green)
         ]
 
 orangeHouses :: [Picture]

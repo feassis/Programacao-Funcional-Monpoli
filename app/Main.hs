@@ -22,7 +22,7 @@ main = do
   let tableSetup = setupJogo nPlayers dicerng ccrng
   play
     (InWindow "Monopoly" (width,height) (0,0))
-    black
+    background
     fps
     tableSetup
     desenhar
